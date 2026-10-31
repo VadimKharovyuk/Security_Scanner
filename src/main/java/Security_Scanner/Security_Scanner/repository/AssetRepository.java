@@ -1,8 +1,9 @@
 package Security_Scanner.Security_Scanner.repository;
 
-import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,9 +15,11 @@ import Security_Scanner.Security_Scanner.model.Asset;
 @Repository
 public interface AssetRepository extends JpaRepository<Asset, Long> {
 
-	List<Asset> findByProjectIdOrderByCreatedAtDesc(Long projectId);
+	Page<Asset> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
-	List<Asset> findByProjectIdAndActiveTrueOrderByCreatedAtDesc(Long projectId);
+	Page<Asset> findByProjectIdOrderByCreatedAtDesc(Long projectId, Pageable pageable);
+
+	Page<Asset> findByProjectIdAndActiveTrueOrderByCreatedAtDesc(Long projectId, Pageable pageable);
 
 	Optional<Asset> findByIdAndProjectId(Long id, Long projectId);
 
