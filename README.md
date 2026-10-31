@@ -18,6 +18,7 @@
 - [База данных](#база-данных)
 - [REST API](#rest-api)
 - [Roadmap](#roadmap)
+- [Автор](#автор)
 - [Безопасность и правовые ограничения](#безопасность-и-правовые-ограничения)
 
 ---
@@ -281,6 +282,15 @@ spring.jpa.properties.hibernate.format_sql=true
 | 7 | Report Engine (HTML / PDF / JSON) |
 | 8 | Hardening: SSRF, DNS rebinding, изоляция workers, audit logging |
 | 9 | Docker-изоляция scanner workers |
+
+---
+
+## Автор
+
+**Vadim Harovyuk** — Java Backend Developer.
+
+- Статья об авторе: [Java backend-разработчик Vadim Harovyuk](https://webscraft.org/blog/java-backend-rozrobnik-vadim-harovyuk)
+- Блог проекта: [webscraft.org/blog](https://webscraft.org/blog)
 
 ---
 
