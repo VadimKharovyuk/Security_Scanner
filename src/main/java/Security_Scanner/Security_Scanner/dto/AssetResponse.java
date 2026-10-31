@@ -2,6 +2,8 @@ package Security_Scanner.Security_Scanner.dto;
 
 import java.time.Instant;
 
+import Security_Scanner.Security_Scanner.enums.OwnershipStatus;
+
 /**
  * Ответ с данными актива.
  * Содержит projectId вместо сущности Project, чтобы не тянуть ленивую связь.
@@ -13,6 +15,7 @@ public record AssetResponse(
 		String name,
 		String baseUrl,
 		boolean active,
+		OwnershipStatus ownershipStatus,
 		Instant createdAt,
 		Instant updatedAt
 

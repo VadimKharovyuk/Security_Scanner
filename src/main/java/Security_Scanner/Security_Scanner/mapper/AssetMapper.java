@@ -31,6 +31,7 @@ public class AssetMapper {
 				asset.getName(),
 				asset.getBaseUrl(),
 				asset.isActive(),
+				asset.getOwnershipStatus(),
 				asset.getCreatedAt(),
 				asset.getUpdatedAt()
 		);
