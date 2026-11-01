@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title th:text="${formTitle}">Проект</title>
+</head>
+<body>
+	<header>
+		<h1 th:text="${formTitle}">Проект</h1>
+		<p><a th:href="@{/projects}">← К списку проектов</a></p>
+	</header>
+
+	<main>
+		<form th:action="${actionUrl}" th:object="${projectRequest}" method="post">
+			<p>
+				<label for="name">Название</label><br>
+				<input type="text" id="name" th:field="*{name}" size="60">
+			</p>
+			<p th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Ошибка</p>
+
+			<p>
+				<label for="description">Описание</label><br>
+				<textarea id="description" th:field="*{description}" rows="4" cols="60"></textarea>
+			</p>
+			<p th:if="${#fields.hasErrors('description')}" th:errors="*{description}">Ошибка</p>
+
+			<button type="submit">Сохранить</button>
+		</form>
+	</main>
+</body>
+</html>

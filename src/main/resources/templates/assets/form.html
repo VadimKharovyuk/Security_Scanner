@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>Новый актив</title>
+</head>
+<body>
+	<header>
+		<h1>Новый актив</h1>
+		<p>
+			<a th:href="@{/projects/{id}(id=${project.id})}" th:text="'← К проекту ' + ${project.name}">← К проекту</a>
+		</p>
+	</header>
+
+	<main>
+		<form th:action="@{/projects/{id}/assets(id=${project.id})}" th:object="${assetRequest}" method="post">
+			<input type="hidden" th:field="*{projectId}">
+
+			<p>
+				<label for="name">Название</label><br>
+				<input type="text" id="name" th:field="*{name}" size="60">
+			</p>
+			<p th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Ошибка</p>
+
+			<p>
+				<label for="baseUrl">URL</label><br>
+				<input type="text" id="baseUrl" th:field="*{baseUrl}" size="60" placeholder="https://example.com">
+			</p>
+			<p th:if="${#fields.hasErrors('baseUrl')}" th:errors="*{baseUrl}">Ошибка</p>
+
+			<button type="submit">Сохранить</button>
+		</form>
+	</main>
+</body>
+</html>

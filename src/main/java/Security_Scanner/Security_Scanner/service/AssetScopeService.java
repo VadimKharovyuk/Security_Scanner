@@ -186,7 +186,8 @@ public class AssetScopeService {
 			url.append(':').append(port);
 		}
 
-		if (rawPath != null && !rawPath.isEmpty()) {
+		// Корневой путь "/" и пустой путь считаем одним и тем же адресом.
+		if (rawPath != null && !rawPath.isEmpty() && !rawPath.equals("/")) {
 			url.append(rawPath);
 		}
 

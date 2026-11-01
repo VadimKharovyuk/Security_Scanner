@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title th:text="${asset.name}">Актив</title>
+</head>
+<body>
+	<header>
+		<h1 th:text="${asset.name}">Актив</h1>
+		<p>
+			<a th:href="@{/projects/{id}(id=${project.id})}" th:text="'← К проекту ' + ${project.name}">← К проекту</a>
+		</p>
+	</header>
+
+	<main>
+		<dl>
+			<dt>ID</dt>
+			<dd th:text="${asset.id}">1</dd>
+
+			<dt>URL</dt>
+			<dd th:text="${asset.baseUrl}">https://example.com</dd>
+
+			<dt>Проект</dt>
+			<dd th:text="${project.name}">Проект</dd>
+
+			<dt>Активен</dt>
+			<dd th:text="${asset.active ? 'Да' : 'Нет'}">Да</dd>
+
+			<dt>Статус владения</dt>
+			<dd th:text="${asset.ownershipStatus}">NOT_REQUIRED</dd>
+
+			<dt>Создан</dt>
+			<dd th:text="${asset.createdAt}">2026-01-01</dd>
+
+			<dt>Обновлён</dt>
+			<dd th:text="${asset.updatedAt}">2026-01-01</dd>
+		</dl>
+
+		<form th:if="${asset.active}" th:action="@{/assets/{id}/deactivate(id=${asset.id})}" method="post">
+			<button type="submit">Деактивировать</button>
+		</form>
+
+		<form th:action="@{/assets/{id}/delete(id=${asset.id})}" method="post"
+			  onsubmit="return confirm('Удалить актив?')">
+			<button type="submit">Удалить</button>
+		</form>
+	</main>
+</body>
+</html>

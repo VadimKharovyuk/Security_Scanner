@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>Активы</title>
+</head>
+<body>
+	<header>
+		<h1>Активы</h1>
+		<p><a th:href="@{/}">На главную</a></p>
+	</header>
+
+	<main>
+		<table border="1" cellpadding="6" cellspacing="0">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Название</th>
+					<th>URL</th>
+					<th>Проект</th>
+					<th>Активен</th>
+					<th>Владение</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="asset : ${assets}">
+					<td th:text="${asset.id}">1</td>
+					<td>
+						<a th:href="@{/assets/{id}(id=${asset.id})}" th:text="${asset.name}">Название</a>
+					</td>
+					<td th:text="${asset.baseUrl}">https://example.com</td>
+					<td>
+						<a th:href="@{/projects/{id}(id=${asset.projectId})}"
+						   th:text="${asset.projectId}">1</a>
+					</td>
+					<td th:text="${asset.active ? 'Да' : 'Нет'}">Да</td>
+					<td th:text="${asset.ownershipStatus}">NOT_REQUIRED</td>
+				</tr>
+				<tr th:if="${#lists.isEmpty(assets)}">
+					<td colspan="6">Активов пока нет</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<nav>
+			<a th:if="${hasPrev}" th:href="@{/assets(page=${page - 1})}">← Назад</a>
+			<span th:text="'Страница ' + (${page} + 1)">Страница 1</span>
+			<a th:if="${hasNext}" th:href="@{/assets(page=${page + 1})}">Вперёд →</a>
+		</nav>
+	</main>
+</body>
+</html>
