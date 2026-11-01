@@ -19,6 +19,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.ai.tool.annotation.Tool;
 
 import Security_Scanner.Security_Scanner.dto.finding.ScanFindingResponse;
+import Security_Scanner.Security_Scanner.dto.report.ReportFindingGroup;
+import Security_Scanner.Security_Scanner.dto.report.ScanReport;
 import Security_Scanner.Security_Scanner.enums.Confidence;
 import Security_Scanner.Security_Scanner.enums.FindingCategory;
 import Security_Scanner.Security_Scanner.enums.FindingStatus;
@@ -81,6 +83,23 @@ class ScanReadToolsTest {
 		when(findingService.findById(8L)).thenReturn(finding(8L, 2L));
 
 		assertThrows(ResourceNotFoundException.class, () -> tools.getFinding(8L));
+	}
+
+	@Test
+	void overviewDescribesRulesWithoutRequestingEachFinding() {
+		ReportFindingGroup group = new ReportFindingGroup("CODE", "Title", "D".repeat(ScanReadTools.MAX_RULE_TEXT + 1),
+				FindingCategory.CONFIGURATION, Severity.LOW, "Fix", "", List.of(finding(7L, SCAN_ID), finding(8L, SCAN_ID)));
+		ScanReport report = mock(ScanReport.class);
+		when(report.findings()).thenReturn(List.of(group));
+		when(reportService.build(SCAN_ID)).thenReturn(report);
+
+		ScanReadTools.RuleBrief rule = tools.getScanOverview().rules().get(0);
+
+		assertEquals(ScanReadTools.MAX_RULE_TEXT + 1, rule.description().length());
+		assertTrue(rule.description().endsWith("…"));
+		assertEquals("Fix", rule.recommendation());
+		assertEquals(2, rule.addresses());
+		assertEquals(7L, rule.exampleFindingId());
 	}
 
 	private ScanFindingResponse finding(Long id, Long scanId) {

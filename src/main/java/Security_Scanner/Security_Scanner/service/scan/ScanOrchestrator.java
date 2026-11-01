@@ -32,10 +32,12 @@ import Security_Scanner.Security_Scanner.service.finding.FindingService;
 import Security_Scanner.Security_Scanner.service.scanner.ScanResult;
 import Security_Scanner.Security_Scanner.service.scanner.SecurityScanner;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Управление жизненным циклом сканирования (раздел 6).
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ScanOrchestrator {
@@ -87,6 +89,7 @@ public class ScanOrchestrator {
 		}
 
 		addEvent(scan, ScanEventType.SCAN_CREATED, "Сканирование создано");
+		log.info("Сканирование {} создано для актива {}", scan.getId(), asset.getId());
 
 		eventPublisher.publishEvent(new ScanCreatedEvent(scan.getId()));
 
@@ -138,6 +141,7 @@ public class ScanOrchestrator {
 
 		scanRepository.save(scan);
 		addEvent(scan, ScanEventType.SCAN_CANCELLED, "Запрошена отмена сканирования");
+		log.info("Сканирование {}: запрошена отмена", id);
 
 		return toResponse(scan);
 	}
@@ -149,6 +153,7 @@ public class ScanOrchestrator {
 		scanEventRepository.deleteByScanId(id);
 		scanTaskRepository.deleteByScanId(id);
 		scanRepository.delete(scan);
+		log.info("Сканирование {} удалено", id);
 	}
 
 	@Transactional(readOnly = true)
@@ -266,6 +271,8 @@ public class ScanOrchestrator {
 			default -> ScanEventType.SCAN_FAILED;
 		};
 		addEvent(scan, eventType, "Сканирование завершено со статусом " + status);
+		log.info("Сканирование {} завершено со статусом {}: выполнено задач {} из {}, с ошибкой: {}",
+				scanId, status, completed, tasks.size(), failed);
 	}
 
 	private Scan getEntity(Long id) {

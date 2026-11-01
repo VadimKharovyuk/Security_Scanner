@@ -121,6 +121,8 @@ public class ZapScanner implements SecurityScanner {
 		URI zapTarget = reachableFromZap(target);
 		String contextName = "scan-" + context.scanId();
 
+		log.info("ZAP, сканирование {}: обход {}", context.scanId(), zapTarget);
+
 		zap.newSession();
 		zap.createContext(contextName, scopeRegex(zapTarget));
 		zap.configureSpider(properties.getMaxDepth(), properties.getMaxSpiderMinutes(), properties.getSpiderThreads());
@@ -132,12 +134,18 @@ public class ZapScanner implements SecurityScanner {
 			return ScanResult.failure("Сканирование ZAP отменено", startedAt);
 		}
 
+		log.info("ZAP, сканирование {}: обход {}, адресов: {}; анализ ответов",
+				context.scanId(), spider == Outcome.TIMED_OUT ? "остановлен по таймауту" : "завершён",
+				zap.spiderResultCount(spiderId));
+
 		Outcome passive = awaitPassiveScan(context, deadline);
 		if (passive == Outcome.CANCELLED) {
 			return ScanResult.failure("Сканирование ZAP отменено", startedAt);
 		}
 
 		List<ZapAlert> alerts = withAssetHost(loadAlerts(zapTarget.toString()), zapTarget, target);
+		log.info("ZAP, сканирование {}: получено предупреждений: {}", context.scanId(), alerts.size());
+
 		List<FindingDraft> found = ZapAlertMapper.toFindings(alerts, target);
 		List<FindingDraft> findings = found.stream().limit(properties.getMaxFindings()).toList();
 
@@ -191,7 +199,14 @@ public class ZapScanner implements SecurityScanner {
 	private Outcome awaitSpider(String spiderId, ScanContext context, Instant deadline)
 			throws IOException, InterruptedException {
 
-		while (zap.spiderProgress(spiderId) < 100) {
+		int reported = -1;
+		int progress;
+
+		while ((progress = zap.spiderProgress(spiderId)) < 100) {
+			if (progress != reported) {
+				log.info("ZAP, сканирование {}: обход {}%", context.scanId(), progress);
+				reported = progress;
+			}
 			if (context.cancelRequested().getAsBoolean()) {
 				zap.stopSpider(spiderId);
 				return Outcome.CANCELLED;

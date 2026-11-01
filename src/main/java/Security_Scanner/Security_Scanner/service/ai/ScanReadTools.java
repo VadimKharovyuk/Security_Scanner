@@ -16,15 +16,19 @@ import Security_Scanner.Security_Scanner.enums.Severity;
 import Security_Scanner.Security_Scanner.exception.ResourceNotFoundException;
 import Security_Scanner.Security_Scanner.service.finding.FindingService;
 import Security_Scanner.Security_Scanner.service.report.ReportService;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Инструменты модели только для чтения. Создаются на один запрос и привязаны к одному сканированию:
  * содержимое сайта может содержать prompt injection, поэтому модель не может изменить данные
  * или прочитать другие сканирования. Размер ответов ограничен, потому что он оплачивается.
  */
+@Slf4j
 class ScanReadTools {
 
 	static final int MAX_FINDINGS = 50;
+
+	static final int MAX_RULE_TEXT = 600;
 
 	private final Long scanId;
 	private final ReportService reportService;
@@ -36,9 +40,11 @@ class ScanReadTools {
 		this.findingService = findingService;
 	}
 
-	@Tool(description = "Обзор сканирования: актив, статус, ограничения проверки, сводка и правила с числом адресов. "
-			+ "Вызывайте первым.")
+	@Tool(description = "Обзор сканирования: актив, статус, ограничения проверки, сводка и все сработавшие правила "
+			+ "с описанием, рекомендацией, числом адресов и ID примера находки. Вызывайте первым.")
 	public ScanOverview getScanOverview() {
+		log.info("AI-анализ сканирования {}: инструмент getScanOverview", scanId);
+
 		ScanReport report = reportService.build(scanId);
 
 		return new ScanOverview(
@@ -56,6 +62,9 @@ class ScanReadTools {
 			@ToolParam(required = false, description = "Критичность") Severity severity,
 			@ToolParam(required = false, description = "Статус") FindingStatus status) {
 
+		log.info("AI-анализ сканирования {}: инструмент searchFindings, критичность {}, статус {}",
+				scanId, severity, status);
+
 		List<ScanFindingResponse> findings = findingService.search(scanId, severity, status);
 
 		return new FindingList(
@@ -68,8 +77,11 @@ class ScanReadTools {
 						.toList());
 	}
 
-	@Tool(description = "Полные данные одной находки этого сканирования: описание, рекомендация и доказательства.")
+	@Tool(description = "Доказательства одной находки этого сканирования. Вызывайте только для самых важных правил, "
+			+ "по одному примеру exampleFindingId: перебирать все находки не нужно.")
 	public ScanFindingResponse getFinding(@ToolParam(description = "ID находки из searchFindings") Long findingId) {
+		log.info("AI-анализ сканирования {}: инструмент getFinding, находка {}", scanId, findingId);
+
 		ScanFindingResponse finding = findingService.findById(findingId);
 
 		if (!scanId.equals(finding.scanId())) {
@@ -80,7 +92,22 @@ class ScanReadTools {
 	}
 
 	private RuleBrief toRule(ReportFindingGroup group) {
-		return new RuleBrief(group.code(), group.title(), group.category(), group.severity(), group.occurrences().size());
+		return new RuleBrief(
+				group.code(),
+				group.title(),
+				truncate(group.description()),
+				truncate(group.recommendation()),
+				group.category(),
+				group.severity(),
+				group.occurrences().size(),
+				group.occurrences().isEmpty() ? null : group.occurrences().get(0).id());
+	}
+
+	private static String truncate(String value) {
+		if (value == null || value.length() <= MAX_RULE_TEXT) {
+			return value;
+		}
+		return value.substring(0, MAX_RULE_TEXT) + "…";
 	}
 
 	record ScanOverview(
@@ -92,7 +119,15 @@ class ScanReadTools {
 			List<RuleBrief> rules) {
 	}
 
-	record RuleBrief(String code, String title, FindingCategory category, Severity severity, int addresses) {
+	record RuleBrief(
+			String code,
+			String title,
+			String description,
+			String recommendation,
+			FindingCategory category,
+			Severity severity,
+			int addresses,
+			Long exampleFindingId) {
 	}
 
 	record FindingList(int total, List<FindingBrief> findings) {

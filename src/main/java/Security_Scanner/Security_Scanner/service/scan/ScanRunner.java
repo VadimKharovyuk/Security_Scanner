@@ -1,5 +1,7 @@
 package Security_Scanner.Security_Scanner.service.scan;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -57,12 +59,14 @@ public class ScanRunner {
 	private void run(Long scanId) {
 		ScanOrchestrator.RunData data = orchestrator.prepareRun(scanId);
 		orchestrator.markRunning(scanId);
+		log.info("Сканирование {}: запуск, адрес {}, задач: {}", scanId, data.baseUrl(), data.tasks().size());
 
 		Map<ScannerType, SecurityScanner> scannersByType = scanners.stream()
 				.collect(Collectors.toMap(SecurityScanner::getType, Function.identity()));
 
 		for (ScanOrchestrator.TaskData task : data.tasks()) {
 			if (orchestrator.isCancelRequested(scanId)) {
+				log.info("Сканирование {}: сканер {} пропущен, запрошена отмена", scanId, task.scannerType());
 				orchestrator.skipTask(task.taskId());
 				continue;
 			}
@@ -71,9 +75,13 @@ public class ScanRunner {
 
 			SecurityScanner scanner = scannersByType.get(task.scannerType());
 			if (scanner == null) {
+				log.warn("Сканирование {}: сканер {} не найден", scanId, task.scannerType());
 				orchestrator.failTask(task.taskId(), "Сканер не найден: " + task.scannerType());
 				continue;
 			}
+
+			log.info("Сканирование {}: сканер {} запущен", scanId, task.scannerType());
+			Instant startedAt = Instant.now();
 
 			try {
 				ScanContext context = new ScanContext(
@@ -86,10 +94,16 @@ public class ScanRunner {
 
 				ScanResult result = scanner.execute(context);
 
+				long elapsed = Duration.between(startedAt, Instant.now()).toMillis();
+
 				if (result.success()) {
+					log.info("Сканирование {}: сканер {} завершён за {} мс, находок: {}. {}",
+							scanId, task.scannerType(), elapsed, result.findings().size(), singleLine(result.message()));
 					orchestrator.completeTask(task.taskId(), result);
 				}
 				else {
+					log.warn("Сканирование {}: сканер {} завершился ошибкой за {} мс: {}",
+							scanId, task.scannerType(), elapsed, singleLine(result.message()));
 					orchestrator.failTask(task.taskId(), result.message());
 				}
 			}
@@ -103,6 +117,13 @@ public class ScanRunner {
 		}
 
 		orchestrator.finish(scanId);
+	}
+
+	/**
+	 * Сообщение сканера может содержать данные с сайта: переводы строк подделали бы записи лога.
+	 */
+	private static String singleLine(String message) {
+		return message == null ? "" : message.replaceAll("[\\r\\n]+", " ");
 	}
 
 }
