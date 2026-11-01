@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title th:text="'Отчёт по сканированию #' + ${report.scanId}">Отчёт</title>
+</head>
+<body>
+	<header>
+		<h1 th:text="'Отчёт по сканированию #' + ${report.scanId}">Отчёт</h1>
+		<p>
+			<a th:href="@{/scans/{id}(id=${report.scanId})}">← К сканированию</a>
+			<a th:href="@{/api/reports/{id}(id=${report.scanId})}">JSON</a>
+		</p>
+	</header>
+
+	<main>
+		<dl>
+			<dt>Проект</dt>
+			<dd th:text="${report.projectName}">Проект</dd>
+
+			<dt>Актив</dt>
+			<dd th:text="${report.assetName + ' — ' + report.assetUrl}">Актив</dd>
+
+			<dt>Подтверждение владения</dt>
+			<dd th:text="${report.ownershipStatus}">NOT_REQUIRED</dd>
+
+			<dt>Статус сканирования</dt>
+			<dd th:text="${report.status}">COMPLETED</dd>
+
+			<dt>Начато</dt>
+			<dd th:text="${report.startedAt != null ? report.startedAt : '—'}">2026-01-01</dd>
+
+			<dt>Завершено</dt>
+			<dd th:text="${report.finishedAt != null ? report.finishedAt : '—'}">2026-01-01</dd>
+
+			<dt>Отчёт сформирован</dt>
+			<dd th:text="${report.generatedAt}">2026-01-01</dd>
+
+			<th:block th:if="${report.errorMessage != null}">
+				<dt>Ошибка</dt>
+				<dd th:text="${report.errorMessage}">—</dd>
+			</th:block>
+		</dl>
+
+		<h2>Ограничения проверки</h2>
+		<p>Отсутствие находки не означает отсутствие уязвимости.</p>
+		<ul>
+			<li th:each="limitation : ${report.limitations}" th:text="${limitation}">Ограничение</li>
+		</ul>
+
+		<h2>Сводка</h2>
+		<p th:text="'Всего находок: ' + ${report.summary.total}">Всего находок: 0</p>
+		<table border="1" cellpadding="6" cellspacing="0">
+			<thead>
+				<tr>
+					<th>Критичность</th>
+					<th>Количество</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="entry : ${report.summary.bySeverity}">
+					<td th:text="${entry.key}">HIGH</td>
+					<td th:text="${entry.value}">0</td>
+				</tr>
+			</tbody>
+		</table>
+		<p th:text="'Признано ложными: ' + ${report.summary.byStatus[T(Security_Scanner.Security_Scanner.enums.FindingStatus).FALSE_POSITIVE]}">
+			Признано ложными: 0
+		</p>
+
+		<h2>Находки</h2>
+		<p th:if="${#lists.isEmpty(report.findings)}">Находок нет.</p>
+
+		<section th:each="group : ${report.findings}">
+			<h3 th:text="${group.severity + ' — ' + group.title}">HIGH — Название</h3>
+			<p>
+				<span th:text="'Код: ' + ${group.code}">Код</span>,
+				<span th:text="'категория: ' + ${group.category}">категория</span>,
+				<span th:text="'адресов: ' + ${#lists.size(group.occurrences)}">адресов: 1</span>
+			</p>
+
+			<p th:if="${group.description != null and !group.description.isBlank()}" th:text="${group.description}">Описание</p>
+
+			<th:block th:if="${group.recommendation != null and !group.recommendation.isBlank()}">
+				<h4>Рекомендация</h4>
+				<p th:text="${group.recommendation}">Рекомендация</p>
+			</th:block>
+
+			<th:block th:if="${group.reference != null and !group.reference.isBlank()}">
+				<h4>Ссылки</h4>
+				<pre th:text="${group.reference}">https://example.com</pre>
+			</th:block>
+
+			<h4>Где обнаружено</h4>
+			<details th:each="occurrence : ${group.occurrences}">
+				<summary>
+					<span th:text="${occurrence.url}">https://example.com</span>
+					<span th:text="'(уверенность: ' + ${occurrence.confidence} + ', статус: ' + ${occurrence.status} + ')'">(уверенность)</span>
+					<a th:href="@{/findings/{id}(id=${occurrence.id})}">Открыть</a>
+				</summary>
+				<div th:each="evidence : ${occurrence.evidence}">
+					<pre th:if="${evidence.content != null and !evidence.content.isBlank()}" th:text="${evidence.content}">Доказательство</pre>
+					<pre th:if="${evidence.requestSnippet != null and !evidence.requestSnippet.isBlank()}" th:text="${evidence.requestSnippet}">Запрос</pre>
+					<pre th:if="${evidence.responseSnippet != null and !evidence.responseSnippet.isBlank()}" th:text="${evidence.responseSnippet}">Ответ</pre>
+				</div>
+			</details>
+		</section>
+
+		<h2>Выполненные проверки</h2>
+		<table border="1" cellpadding="6" cellspacing="0">
+			<thead>
+				<tr>
+					<th>Сканер</th>
+					<th>Статус</th>
+					<th>Начата</th>
+					<th>Завершена</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="task : ${report.tasks}">
+					<td th:text="${task.scannerType}">HTTP</td>
+					<td th:text="${task.status}">COMPLETED</td>
+					<td th:text="${task.startedAt != null ? task.startedAt : '—'}">—</td>
+					<td th:text="${task.finishedAt != null ? task.finishedAt : '—'}">—</td>
+				</tr>
+				<tr th:if="${#lists.isEmpty(report.tasks)}">
+					<td colspan="4">Задач нет</td>
+				</tr>
+			</tbody>
+		</table>
+	</main>
+</body>
+</html>

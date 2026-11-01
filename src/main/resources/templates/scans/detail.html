@@ -13,6 +13,7 @@
 		<p>
 			<a th:href="@{/scans}">← К списку сканирований</a>
 			<a th:href="@{/assets/{id}(id=${asset.id})}" th:text="'Актив: ' + ${asset.name}">Актив</a>
+			<a th:href="@{/scans/{id}/report(id=${scan.id})}">Отчёт</a>
 		</p>
 	</header>
 
