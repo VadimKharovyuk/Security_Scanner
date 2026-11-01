@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title th:text="${finding.title}">Находка</title>
+</head>
+<body>
+	<header>
+		<h1 th:text="${finding.title}">Находка</h1>
+		<p>
+			<a th:href="@{/findings}">← К списку находок</a>
+			<a th:href="@{/scans/{id}(id=${finding.scanId})}" th:text="'Сканирование #' + ${finding.scanId}">Сканирование</a>
+			<a th:href="@{/assets/{id}(id=${asset.id})}" th:text="'Актив: ' + ${asset.name}">Актив</a>
+		</p>
+	</header>
+
+	<main>
+		<dl>
+			<dt>Код</dt>
+			<dd th:text="${finding.code}">MISSING_HSTS</dd>
+
+			<dt>Категория</dt>
+			<dd th:text="${finding.category}">HEADERS</dd>
+
+			<dt>Критичность</dt>
+			<dd th:text="${finding.severity}">MEDIUM</dd>
+
+			<dt>Уверенность</dt>
+			<dd th:text="${finding.confidence}">HIGH</dd>
+
+			<dt>Статус</dt>
+			<dd th:text="${finding.status}">OPEN</dd>
+
+			<dt>URL</dt>
+			<dd th:text="${finding.url}">https://example.com</dd>
+
+			<dt>Обнаружена</dt>
+			<dd th:text="${finding.detectedAt}">2026-01-01</dd>
+		</dl>
+
+		<h2>Описание</h2>
+		<p th:text="${finding.description != null ? finding.description : '—'}">Описание</p>
+
+		<h2>Рекомендация</h2>
+		<p th:text="${finding.recommendation != null ? finding.recommendation : '—'}">Рекомендация</p>
+
+		<p th:if="${finding.reference != null}">
+			Ссылка:
+			<a th:href="${finding.reference}" th:text="${finding.reference}">https://example.com</a>
+		</p>
+
+		<h2>Доказательства</h2>
+		<table border="1" cellpadding="6" cellspacing="0">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Тип</th>
+					<th>Содержание</th>
+					<th>Запрос</th>
+					<th>Ответ</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="evidence : ${finding.evidence}">
+					<td th:text="${evidence.id}">1</td>
+					<td th:text="${evidence.type}">RESPONSE_HEADER</td>
+					<td th:text="${evidence.content != null ? evidence.content : '—'}">Содержание</td>
+					<td th:text="${evidence.requestSnippet != null ? evidence.requestSnippet : '—'}">—</td>
+					<td th:text="${evidence.responseSnippet != null ? evidence.responseSnippet : '—'}">—</td>
+				</tr>
+				<tr th:if="${#lists.isEmpty(finding.evidence)}">
+					<td colspan="5">Доказательств нет</td>
+				</tr>
+			</tbody>
+		</table>
+	</main>
+</body>
+</html>

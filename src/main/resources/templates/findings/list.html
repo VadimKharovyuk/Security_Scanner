@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>Находки</title>
+</head>
+<body>
+	<header>
+		<h1>Находки</h1>
+		<p>
+			<a th:href="@{/}">На главную</a>
+			<a th:href="@{/scans}">Сканирования</a>
+		</p>
+	</header>
+
+	<main>
+		<table border="1" cellpadding="6" cellspacing="0">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Критичность</th>
+					<th>Код</th>
+					<th>Название</th>
+					<th>Сканирование</th>
+					<th>URL</th>
+					<th>Обнаружена</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="finding : ${findings}">
+					<td>
+						<a th:href="@{/findings/{id}(id=${finding.id})}" th:text="${finding.id}">1</a>
+					</td>
+					<td th:text="${finding.severity}">MEDIUM</td>
+					<td th:text="${finding.code}">MISSING_HSTS</td>
+					<td>
+						<a th:href="@{/findings/{id}(id=${finding.id})}" th:text="${finding.title}">Название</a>
+					</td>
+					<td>
+						<a th:href="@{/scans/{id}(id=${finding.scanId})}" th:text="'#' + ${finding.scanId}">#1</a>
+					</td>
+					<td th:text="${finding.url}">https://example.com</td>
+					<td th:text="${finding.detectedAt}">2026-01-01</td>
+				</tr>
+				<tr th:if="${#lists.isEmpty(findings)}">
+					<td colspan="7">Находок пока нет</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<nav>
+			<a th:if="${hasPrev}" th:href="@{/findings(page=${page - 1})}">← Назад</a>
+			<span th:text="'Страница ' + (${page} + 1)">Страница 1</span>
+			<a th:if="${hasNext}" th:href="@{/findings(page=${page + 1})}">Вперёд →</a>
+		</nav>
+	</main>
+</body>
+</html>
