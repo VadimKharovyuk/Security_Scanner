@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
@@ -14,7 +15,6 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSession;
@@ -180,7 +180,7 @@ public class TlsSecurityScanner implements SecurityScanner {
 	 * Проверяет данные сертификата. Выделено отдельно, чтобы тестировать без сети.
 	 */
 	List<FindingDraft> evaluate(String url, CertificateInfo certificate,
-			boolean chainTrusted, boolean hostnameMatches, boolean weakProtocolSupported, Instant now) {
+			boolean chainTrusted, boolean hostnameMatches, List<String> weakProtocols, Instant now) {
 
 		List<FindingDraft> findings = new ArrayList<>();
 
@@ -218,9 +218,8 @@ public class TlsSecurityScanner implements SecurityScanner {
 					"Сертификат не соответствует имени хоста"));
 		}
 
-		if (weakProtocolSupported) {
-			findings.add(withCertificate(WEAK_PROTOCOL, url, certificate,
-					"Сервер принимает устаревшую версию TLS"));
+		if (!weakProtocols.isEmpty()) {
+			findings.add(withCertificate(WEAK_PROTOCOL, url, certificate, weakProtocolSummary(weakProtocols)));
 		}
 
 		return findings;
@@ -241,12 +240,25 @@ public class TlsSecurityScanner implements SecurityScanner {
 		// Повторная проверка области непосредственно перед сетевым соединением.
 		assetScopeService.validateAndNormalize(url);
 
-		SessionInfo session = handshake(host, port, true, false, attemptTimeout, null);
+		List<String> weakProtocols = findWeakProtocols(host, port, attemptTimeout);
+
+		SessionInfo session;
+		try {
+			session = handshake(host, port, true, false, attemptTimeout);
+		}
+		catch (SSLException exception) {
+			if (weakProtocols.isEmpty()) {
+				throw exception;
+			}
+			log.debug("Сертификат {} недоступен: JDK отклонил рукопожатие", host, exception);
+			return List.of(weakProtocolWithoutCertificate(url, weakProtocols));
+		}
+
 		CertificateInfo certificate = describe(session);
 
 		boolean chainTrusted;
 		try {
-			handshake(host, port, false, false, attemptTimeout, null);
+			handshake(host, port, false, false, attemptTimeout);
 			chainTrusted = true;
 		}
 		catch (SSLException exception) {
@@ -257,7 +269,7 @@ public class TlsSecurityScanner implements SecurityScanner {
 		boolean hostnameMatches = true;
 		if (chainTrusted) {
 			try {
-				handshake(host, port, false, true, attemptTimeout, null);
+				handshake(host, port, false, true, attemptTimeout);
 			}
 			catch (SSLException exception) {
 				log.debug("Имя хоста не совпало с сертификатом для {}", host, exception);
@@ -265,13 +277,11 @@ public class TlsSecurityScanner implements SecurityScanner {
 			}
 		}
 
-		boolean weakProtocol = supportsWeakProtocol(host, port, attemptTimeout);
-
-		return evaluate(url, certificate, chainTrusted, hostnameMatches, weakProtocol, Instant.now());
+		return evaluate(url, certificate, chainTrusted, hostnameMatches, weakProtocols, Instant.now());
 	}
 
 	private SessionInfo handshake(String host, int port, boolean trustAll, boolean verifyHostname,
-			Duration timeout, List<String> enabledProtocols) throws IOException {
+			Duration timeout) throws IOException, NoSuchAlgorithmException {
 
 		SSLContext context = trustAll ? trustAllContext() : SSLContext.getDefault();
 
@@ -285,10 +295,6 @@ public class TlsSecurityScanner implements SecurityScanner {
 			parameters.setEndpointIdentificationAlgorithm(verifyHostname ? "HTTPS" : null);
 			socket.setSSLParameters(parameters);
 
-			if (enabledProtocols != null) {
-				socket.setEnabledProtocols(enabledProtocols.toArray(String[]::new));
-			}
-
 			socket.startHandshake();
 
 			SSLSession sslSession = socket.getSession();
@@ -298,20 +304,31 @@ public class TlsSecurityScanner implements SecurityScanner {
 		}
 	}
 
-	private boolean supportsWeakProtocol(String host, int port, Duration timeout) {
-		for (String protocol : List.of("TLSv1.1", "TLSv1")) {
+	private List<String> findWeakProtocols(String host, int port, Duration timeout) {
+		List<String> protocols = new ArrayList<>();
+
+		for (LegacyTlsProbe.Version version : LegacyTlsProbe.Version.values()) {
 			try {
-				SessionInfo session = handshake(host, port, true, false, timeout, List.of(protocol));
-				if (protocol.equals(session.protocol())) {
-					return true;
+				if (LegacyTlsProbe.accepts(host, port, version, timeout)) {
+					protocols.add(version.protocol());
 				}
 			}
-			catch (IOException | RuntimeException exception) {
-				log.debug("Протокол {} не согласован для {}", protocol, host, exception);
+			catch (IOException exception) {
+				log.debug("Протокол {} не согласован для {}", version.protocol(), host, exception);
 			}
 		}
 
-		return false;
+		return protocols;
+	}
+
+	private String weakProtocolSummary(List<String> protocols) {
+		return "Сервер принимает устаревшие версии TLS: " + String.join(", ", protocols);
+	}
+
+	private FindingDraft weakProtocolWithoutCertificate(String url, List<String> protocols) {
+		return FindingDraft.of(WEAK_PROTOCOL, url, EvidenceDraft.of(EvidenceType.TEXT,
+				weakProtocolSummary(protocols)
+						+ "\nСертификат не проверен: сервер не поддерживает версии TLS и шифры, разрешённые в JDK."));
 	}
 
 	private CertificateInfo describe(SessionInfo session) throws CertificateParsingException {

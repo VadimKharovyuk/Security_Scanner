@@ -70,7 +70,8 @@
 - [x] `AssetScopeService`
 - [x] Scan Orchestrator, HTTP Scanner и заглушка для тестов
 - [x] Finding Processor и Evidence Manager (HTTP-проверки)
-- [ ] TLS Scanner и OWASP ZAP
+- [x] TLS Scanner
+- [ ] OWASP ZAP
 - [ ] AI-слой
 - [ ] Attack Graph
 - [ ] Validation Engine
@@ -122,7 +123,7 @@
 
 - Spring Security (позже)
 - Spring AI: Ollama + cloud LLM через OpenAI-compatible API
-- OWASP ZAP, HTTP Scanner, TLS Scanner
+- OWASP ZAP
 - Docker для изоляции scanner workers (в конце проекта)
 - Redis, Flyway — **не используются**
 
@@ -225,6 +226,9 @@ security-scanner.stub.enabled=false
 # HTTP scanner
 security-scanner.http.enabled=true
 
+# TLS scanner
+security-scanner.tls.enabled=true
+
 # Allowed scan scope
 security-scanner.scope.allowed-hosts=webscraft.org,www.webscraft.org
 security-scanner.scope.allow-subdomains=false
@@ -268,6 +272,22 @@ security-scanner.scope.allow-subdomains=false
 | `MISSING_PERMISSIONS_POLICY` | LOW | Нет `Permissions-Policy` |
 | `SERVER_VERSION_DISCLOSURE` | LOW | `Server` содержит версию |
 | `X_POWERED_BY_DISCLOSURE` | LOW | Присутствует `X-Powered-By` |
+
+### TLS-проверки
+
+Выполняются только для активов с `https`.
+
+| Код | Критичность | Что проверяется |
+|---|---|---|
+| `TLS_CERTIFICATE_EXPIRED` | HIGH | Срок действия сертификата истёк |
+| `TLS_CERTIFICATE_NOT_YET_VALID` | HIGH | Сертификат ещё не начал действовать |
+| `TLS_CERTIFICATE_UNTRUSTED` | HIGH | Стандартный trust store отклонил цепочку |
+| `TLS_HOSTNAME_MISMATCH` | HIGH | Сертификат не соответствует имени хоста |
+| `TLS_CERTIFICATE_EXPIRING_SOON` | MEDIUM | До окончания срока меньше 30 дней |
+| `TLS_CERTIFICATE_SELF_SIGNED` | MEDIUM | Subject и Issuer совпадают |
+| `TLS_WEAK_PROTOCOL` | MEDIUM | Сервер принимает TLS 1.0 или TLS 1.1 |
+
+JDK запрещает TLS 1.0 и 1.1, поэтому их поддержка определяется по ответу сервера на вручную сформированный ClientHello. Если сервер работает только с версиями или шифрами, запрещёнными в JDK, сертификат прочитать нельзя, и в отчёт попадает только `TLS_WEAK_PROTOCOL`.
 
 Каталог `findings` синхронизируется при старте приложения с определениями, которые объявляют сканеры. Значения cookie в доказательствах редактируются (`<redacted>`).
 
