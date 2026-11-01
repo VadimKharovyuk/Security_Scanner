@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>Сканирования</title>
+</head>
+<body>
+	<header>
+		<h1>Сканирования</h1>
+		<p><a th:href="@{/}">На главную</a></p>
+	</header>
+
+	<main>
+		<table border="1" cellpadding="6" cellspacing="0">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Актив</th>
+					<th>Статус</th>
+					<th>Создан</th>
+					<th>Начат</th>
+					<th>Завершён</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="scan : ${scans}">
+					<td>
+						<a th:href="@{/scans/{id}(id=${scan.id})}" th:text="${scan.id}">1</a>
+					</td>
+					<td>
+						<a th:href="@{/assets/{id}(id=${scan.assetId})}" th:text="${scan.assetId}">1</a>
+					</td>
+					<td th:text="${scan.status}">QUEUED</td>
+					<td th:text="${scan.createdAt}">2026-01-01</td>
+					<td th:text="${scan.startedAt != null ? scan.startedAt : '—'}">2026-01-01</td>
+					<td th:text="${scan.finishedAt != null ? scan.finishedAt : '—'}">2026-01-01</td>
+				</tr>
+				<tr th:if="${#lists.isEmpty(scans)}">
+					<td colspan="6">Сканирований пока нет</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<nav>
+			<a th:if="${hasPrev}" th:href="@{/scans(page=${page - 1})}">← Назад</a>
+			<span th:text="'Страница ' + (${page} + 1)">Страница 1</span>
+			<a th:if="${hasNext}" th:href="@{/scans(page=${page + 1})}">Вперёд →</a>
+		</nav>
+	</main>
+</body>
+</html>

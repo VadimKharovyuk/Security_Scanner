@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta th:if="${scan.status.name() == 'QUEUED' or scan.status.name() == 'RUNNING'
+			or scan.status.name() == 'ANALYZING' or scan.status.name() == 'VALIDATING'}"
+		  http-equiv="refresh" content="3">
+	<title th:text="'Сканирование #' + ${scan.id}">Сканирование</title>
+</head>
+<body>
+	<header>
+		<h1 th:text="'Сканирование #' + ${scan.id}">Сканирование</h1>
+		<p>
+			<a th:href="@{/scans}">← К списку сканирований</a>
+			<a th:href="@{/assets/{id}(id=${asset.id})}" th:text="'Актив: ' + ${asset.name}">Актив</a>
+		</p>
+	</header>
+
+	<main>
+		<dl>
+			<dt>Статус</dt>
+			<dd th:text="${scan.status}">QUEUED</dd>
+
+			<dt>URL актива</dt>
+			<dd th:text="${asset.baseUrl}">https://example.com</dd>
+
+			<dt>Создан</dt>
+			<dd th:text="${scan.createdAt}">2026-01-01</dd>
+
+			<dt>Начат</dt>
+			<dd th:text="${scan.startedAt != null ? scan.startedAt : '—'}">2026-01-01</dd>
+
+			<dt>Завершён</dt>
+			<dd th:text="${scan.finishedAt != null ? scan.finishedAt : '—'}">2026-01-01</dd>
+
+			<dt>Ошибка</dt>
+			<dd th:text="${scan.errorMessage != null ? scan.errorMessage : '—'}">—</dd>
+		</dl>
+
+		<p th:if="${scan.status.name() == 'QUEUED' or scan.status.name() == 'RUNNING'
+				or scan.status.name() == 'ANALYZING' or scan.status.name() == 'VALIDATING'}">
+			Сканирование выполняется, страница обновляется автоматически.
+		</p>
+
+		<p>
+			<form th:if="${scan.status.name() != 'COMPLETED' and scan.status.name() != 'PARTIALLY_COMPLETED'
+					and scan.status.name() != 'FAILED' and scan.status.name() != 'CANCELLED'}"
+				  th:action="@{/scans/{id}/cancel(id=${scan.id})}" method="post" style="display:inline">
+				<button type="submit">Отменить сканирование</button>
+			</form>
+
+			<form th:action="@{/scans/{id}/delete(id=${scan.id})}" method="post" style="display:inline"
+				  onsubmit="return confirm('Удалить сканирование и его события?')">
+				<button type="submit">Удалить</button>
+			</form>
+		</p>
+
+		<h2>Задачи</h2>
+		<table border="1" cellpadding="6" cellspacing="0">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Сканер</th>
+					<th>Статус</th>
+					<th>Начата</th>
+					<th>Завершена</th>
+					<th>Ошибка</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="task : ${scan.tasks}">
+					<td th:text="${task.id}">1</td>
+					<td th:text="${task.scannerType}">STUB</td>
+					<td th:text="${task.status}">PENDING</td>
+					<td th:text="${task.startedAt != null ? task.startedAt : '—'}">—</td>
+					<td th:text="${task.finishedAt != null ? task.finishedAt : '—'}">—</td>
+					<td th:text="${task.errorMessage != null ? task.errorMessage : '—'}">—</td>
+				</tr>
+				<tr th:if="${#lists.isEmpty(scan.tasks)}">
+					<td colspan="6">Задач нет</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<h2>События</h2>
+		<table border="1" cellpadding="6" cellspacing="0">
+			<thead>
+				<tr>
+					<th>Время</th>
+					<th>Тип</th>
+					<th>Сообщение</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="event : ${scan.events}">
+					<td th:text="${event.createdAt}">2026-01-01</td>
+					<td th:text="${event.type}">SCAN_CREATED</td>
+					<td th:text="${event.message}">—</td>
+				</tr>
+				<tr th:if="${#lists.isEmpty(scan.events)}">
+					<td colspan="3">Событий нет</td>
+				</tr>
+			</tbody>
+		</table>
+	</main>
+</body>
+</html>
