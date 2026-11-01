@@ -1,9 +1,8 @@
-package Security_Scanner.Security_Scanner.dto.scanfinding;
+package Security_Scanner.Security_Scanner.dto.finding;
 
 import java.time.Instant;
 import java.util.List;
 
-import Security_Scanner.Security_Scanner.dto.evidence.SecurityEvidenceResponse;
 import Security_Scanner.Security_Scanner.enums.Confidence;
 import Security_Scanner.Security_Scanner.enums.FindingCategory;
 import Security_Scanner.Security_Scanner.enums.FindingStatus;

@@ -1,4 +1,4 @@
-package Security_Scanner.Security_Scanner.dto.evidence;
+package Security_Scanner.Security_Scanner.dto.finding;
 
 import Security_Scanner.Security_Scanner.enums.EvidenceType;
 

@@ -1,4 +1,4 @@
-package Security_Scanner.Security_Scanner.dto.scantask;
+package Security_Scanner.Security_Scanner.dto.scan;
 
 import java.time.Instant;
 
