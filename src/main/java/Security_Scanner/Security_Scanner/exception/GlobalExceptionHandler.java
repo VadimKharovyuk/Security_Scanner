@@ -29,6 +29,11 @@ public class GlobalExceptionHandler {
 		return errorView(HttpStatus.BAD_REQUEST, "Недопустимый адрес", exception.getMessage());
 	}
 
+	@ExceptionHandler(AiUnavailableException.class)
+	public ModelAndView handleAiUnavailable(AiUnavailableException exception) {
+		return errorView(HttpStatus.SERVICE_UNAVAILABLE, "AI-анализ недоступен", exception.getMessage());
+	}
+
 	@ExceptionHandler(Exception.class)
 	public ModelAndView handleUnexpected(Exception exception) {
 		log.error("Необработанная ошибка", exception);

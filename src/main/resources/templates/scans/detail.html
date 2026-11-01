@@ -50,6 +50,10 @@
 				<button type="submit">Отменить сканирование</button>
 			</form>
 
+			<form th:action="@{/scans/{id}/analysis(id=${scan.id})}" method="post" style="display:inline">
+				<button type="submit">AI-анализ</button>
+			</form>
+
 			<form th:action="@{/scans/{id}/delete(id=${scan.id})}" method="post" style="display:inline"
 				  onsubmit="return confirm('Удалить сканирование и его события?')">
 				<button type="submit">Удалить</button>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title th:text="'AI-анализ сканирования #' + ${scanId}">AI-анализ</title>
+</head>
+<body>
+	<header>
+		<h1 th:text="'AI-анализ сканирования #' + ${scanId}">AI-анализ</h1>
+		<p>
+			<a th:href="@{/scans/{id}(id=${scanId})}">← К сканированию</a>
+			<a th:href="@{/scans/{id}/report(id=${scanId})}">Отчёт</a>
+		</p>
+	</header>
+
+	<main>
+		<p>Текст создан моделью и не подтверждает уязвимости. Он не сохраняется и не меняет статусы находок.</p>
+		<pre style="white-space: pre-wrap" th:text="${analysis}">Анализ</pre>
+	</main>
+</body>
+</html>

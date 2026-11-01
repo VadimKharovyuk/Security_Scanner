@@ -73,7 +73,8 @@
 - [x] TLS Scanner
 - [x] OWASP ZAP: пассивный режим
 - [ ] OWASP ZAP: активный режим
-- [ ] AI-слой
+- [x] AI-анализ сканирования: инструменты только для чтения через OpenRouter
+- [ ] AI-слой для графа атак и классификации находок
 - [ ] Attack Graph
 - [ ] Validation Engine
 - [ ] Database Access Validation
@@ -113,6 +114,7 @@
 - PostgreSQL
 - Lombok
 - Thymeleaf
+- Spring AI 2.0 (`@Tool`), модели через OpenRouter
 
 **Frontend**
 
@@ -124,7 +126,6 @@
 **Планируется**
 
 - Spring Security (позже)
-- Spring AI: инструменты `@Tool` поверх сервисного слоя, модель через OpenRouter
 - Docker для упаковки приложения под хостинг (в конце проекта)
 - Redis, Flyway — **не используются**
 
@@ -241,6 +242,17 @@ security-scanner.zap.enabled=${ZAP_ENABLED:false}
 security-scanner.zap.url=${ZAP_URL:http://127.0.0.1:8090}
 security-scanner.zap.api-key=${ZAP_API_KEY:}
 
+# AI through OpenRouter. Without a key the application works without AI.
+app.openrouter.api-key=${OPENROUTER_API_KEY:}
+app.openrouter.base-url=https://openrouter.ai/api/v1
+app.openrouter.data-collection=deny
+app.openrouter.model=deepseek/deepseek-v4-flash-0731
+app.openrouter.temperature=0.3
+app.openrouter.max-tokens=8192
+
+# Per-task overrides: app.openrouter.tasks.<AiTaskType>.model | temperature | max-tokens
+app.openrouter.tasks.FINDING_ANALYSIS.temperature=0.2
+
 # Close scans interrupted by a restart
 security-scanner.recovery.enabled=true
 
@@ -270,6 +282,7 @@ security-scanner.scope.allow-subdomains=false
 | `POST` | `/scans/{id}/delete` | Удалить сканирование вместе с находками |
 | `GET` | `/scans/{id}/report` | Отчёт по сканированию |
 | `GET` | `/api/reports/{id}` | Отчёт по сканированию в JSON |
+| `POST` | `/scans/{id}/analysis` | AI-анализ сканирования |
 | `GET` | `/findings` | Все находки |
 | `GET` | `/findings/{id}` | Находка и её доказательства |
 
@@ -278,6 +291,15 @@ security-scanner.scope.allow-subdomains=false
 ### Отчёт
 
 Находки сгруппированы по правилам и отсортированы по критичности, ложные срабатывания видны только в сводке. Раздел «Ограничения проверки» перечисляет, что не было проверено: упавшие и пропущенные сканеры, отсутствие обхода сайта и то, что проверки только пассивные. Отчёт собирается из сохранённых данных и новых запросов к сайту не отправляет.
+
+### AI-анализ
+
+Кнопка «AI-анализ» на странице сканирования передаёт его результаты модели и показывает её пояснение. Для работы нужен `OPENROUTER_API_KEY` в `.env`, без него остальные функции приложения работают как обычно. Находки передаются OpenRouter и провайдеру модели.
+
+- Модель и параметры задаются общими настройками и могут переопределяться для каждого `AiTaskType`.
+- Инструменты модели только читают данные и привязаны к одному сканированию: `getScanOverview`, `searchFindings`, `getFinding`.
+- Запрос ограничен 10 вызовами инструментов, а `searchFindings` возвращает не больше 50 находок.
+- Содержимое сайтов считается недоверенным. Ответ не сохраняется, не меняет статусы находок и не подтверждает уязвимости.
 
 ### Прерванные сканирования
 
