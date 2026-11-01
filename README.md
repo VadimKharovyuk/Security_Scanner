@@ -181,13 +181,13 @@ CREATE DATABASE "Security_Scanner";
 
 ### 2. Настроить подключение
 
-Параметры по умолчанию — в `src/main/resources/application.properties`. Переопределяются переменными окружения:
+Параметры по умолчанию — в `src/main/resources/application.properties`. Пароль и ключи задаются в файле `.env` в корне проекта, он не попадает в git:
 
 ```bash
-export DB_URL="jdbc:postgresql://localhost:5432/Security_Scanner"
-export DB_USERNAME="postgres"
-export DB_PASSWORD="ваш_пароль"
+cp .env.example .env              # задать DB_PASSWORD
 ```
+
+Приложение нужно запускать из корня проекта, иначе `.env` не будет найден. Адрес базы и пользователя можно переопределить через `DB_URL` и `DB_USERNAME`.
 
 ### 3. Запустить
 
@@ -216,7 +216,7 @@ server.port=2157
 spring.datasource.driver-class-name=org.postgresql.Driver
 spring.datasource.url=${DB_URL:jdbc:postgresql://localhost:5432/Security_Scanner}
 spring.datasource.username=${DB_USERNAME:postgres}
-spring.datasource.password=${DB_PASSWORD:19111993}
+spring.datasource.password=${DB_PASSWORD}
 
 # JPA / Hibernate
 spring.jpa.hibernate.ddl-auto=update
@@ -262,8 +262,6 @@ security-scanner.scope.allow-subdomains=false
 ```
 
 > ⚠️ `ddl-auto=update` используется только для разработки. Перед production схему нужно зафиксировать (`validate`) и перейти на управляемые миграции.
-
-> ⚠️ Пароль по умолчанию задан в файле. Для реального использования вынесите его в переменную окружения и уберите значение по умолчанию.
 
 > ℹ️ `hibernate.dialect` указан явно, хотя Hibernate 6+ определяет диалект автоматически и пишет об этом WARN. Строку можно удалить.
 
