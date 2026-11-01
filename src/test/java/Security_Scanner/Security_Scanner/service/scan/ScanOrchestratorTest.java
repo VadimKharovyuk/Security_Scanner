@@ -28,7 +28,8 @@ import Security_Scanner.Security_Scanner.service.project.ProjectService;
 		"security-scanner.scope.allowed-hosts=8.8.8.8",
 		"security-scanner.stub.enabled=true",
 		"security-scanner.http.enabled=false",
-		"security-scanner.tls.enabled=false"
+		"security-scanner.tls.enabled=false",
+		"security-scanner.recovery.enabled=false"
 })
 class ScanOrchestratorTest {
 

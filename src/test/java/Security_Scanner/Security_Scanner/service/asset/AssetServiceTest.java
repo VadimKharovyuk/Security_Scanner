@@ -19,7 +19,10 @@ import Security_Scanner.Security_Scanner.enums.OwnershipStatus;
 import Security_Scanner.Security_Scanner.exception.ConflictException;
 import Security_Scanner.Security_Scanner.service.project.ProjectService;
 
-@SpringBootTest(properties = "security-scanner.scope.allowed-hosts=8.8.8.8")
+@SpringBootTest(properties = {
+		"security-scanner.scope.allowed-hosts=8.8.8.8",
+		"security-scanner.recovery.enabled=false"
+})
 @Transactional
 class AssetServiceTest {
 

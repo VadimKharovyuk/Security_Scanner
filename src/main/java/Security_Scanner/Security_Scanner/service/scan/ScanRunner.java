@@ -5,7 +5,8 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -28,15 +29,32 @@ import lombok.extern.slf4j.Slf4j;
 public class ScanRunner {
 
 	private final ScanOrchestrator orchestrator;
+	private final ScanRecoveryService recoveryService;
 	private final List<SecurityScanner> scanners;
+	private final TaskExecutor scanExecutor;
 
-	@Async("scanExecutor")
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void onScanCreated(ScanCreatedEvent event) {
-		execute(event.scanId());
+		try {
+			scanExecutor.execute(() -> execute(event.scanId()));
+		}
+		catch (TaskRejectedException exception) {
+			log.warn("Сканирование {} отклонено пулом потоков", event.scanId(), exception);
+			recoveryService.abort(event.scanId(), ScanRecoveryService.QUEUE_FULL_MESSAGE);
+		}
 	}
 
 	public void execute(Long scanId) {
+		try {
+			run(scanId);
+		}
+		catch (RuntimeException exception) {
+			log.error("Сканирование {} завершилось внутренней ошибкой", scanId, exception);
+			recoveryService.abort(scanId, ScanRecoveryService.INTERNAL_ERROR_MESSAGE);
+		}
+	}
+
+	private void run(Long scanId) {
 		ScanOrchestrator.RunData data = orchestrator.prepareRun(scanId);
 		orchestrator.markRunning(scanId);
 
