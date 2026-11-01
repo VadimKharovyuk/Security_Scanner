@@ -5,7 +5,7 @@ import java.time.Instant;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import Security_Scanner.Security_Scanner.dto.OwnershipCheckResult;
+import Security_Scanner.Security_Scanner.dto.asset.OwnershipCheckResult;
 import Security_Scanner.Security_Scanner.enums.OwnershipStatus;
 import Security_Scanner.Security_Scanner.model.Asset;
 

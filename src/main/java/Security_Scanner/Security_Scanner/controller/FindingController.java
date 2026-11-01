@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import Security_Scanner.Security_Scanner.dto.ScanFindingResponse;
-import Security_Scanner.Security_Scanner.dto.ScanResponse;
+import Security_Scanner.Security_Scanner.dto.scanfinding.ScanFindingResponse;
+import Security_Scanner.Security_Scanner.dto.scan.ScanResponse;
 import Security_Scanner.Security_Scanner.service.AssetService;
 import Security_Scanner.Security_Scanner.service.FindingService;
 import Security_Scanner.Security_Scanner.service.ScanOrchestrator;

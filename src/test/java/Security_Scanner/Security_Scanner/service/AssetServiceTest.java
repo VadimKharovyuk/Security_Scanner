@@ -11,10 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import Security_Scanner.Security_Scanner.dto.AssetRequest;
-import Security_Scanner.Security_Scanner.dto.AssetResponse;
-import Security_Scanner.Security_Scanner.dto.ProjectRequest;
-import Security_Scanner.Security_Scanner.dto.ProjectResponse;
+import Security_Scanner.Security_Scanner.dto.asset.AssetRequest;
+import Security_Scanner.Security_Scanner.dto.asset.AssetResponse;
+import Security_Scanner.Security_Scanner.dto.project.ProjectRequest;
+import Security_Scanner.Security_Scanner.dto.project.ProjectResponse;
 import Security_Scanner.Security_Scanner.enums.OwnershipStatus;
 import Security_Scanner.Security_Scanner.exception.ConflictException;
 

@@ -1,4 +1,4 @@
-package Security_Scanner.Security_Scanner.dto;
+package Security_Scanner.Security_Scanner.dto.scan;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;

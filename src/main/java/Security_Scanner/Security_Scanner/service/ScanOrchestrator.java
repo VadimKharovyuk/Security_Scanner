@@ -10,8 +10,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import Security_Scanner.Security_Scanner.dto.ScanRequest;
-import Security_Scanner.Security_Scanner.dto.ScanResponse;
+import Security_Scanner.Security_Scanner.dto.scan.ScanRequest;
+import Security_Scanner.Security_Scanner.dto.scan.ScanResponse;
 import Security_Scanner.Security_Scanner.enums.OwnershipStatus;
 import Security_Scanner.Security_Scanner.enums.ScanEventType;
 import Security_Scanner.Security_Scanner.enums.ScanStatus;

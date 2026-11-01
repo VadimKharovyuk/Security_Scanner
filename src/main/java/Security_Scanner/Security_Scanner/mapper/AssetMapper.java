@@ -2,8 +2,8 @@ package Security_Scanner.Security_Scanner.mapper;
 
 import org.springframework.stereotype.Component;
 
-import Security_Scanner.Security_Scanner.dto.AssetRequest;
-import Security_Scanner.Security_Scanner.dto.AssetResponse;
+import Security_Scanner.Security_Scanner.dto.asset.AssetRequest;
+import Security_Scanner.Security_Scanner.dto.asset.AssetResponse;
 import Security_Scanner.Security_Scanner.model.Asset;
 import Security_Scanner.Security_Scanner.model.Project;
 

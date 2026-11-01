@@ -7,9 +7,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import Security_Scanner.Security_Scanner.dto.AssetRequest;
-import Security_Scanner.Security_Scanner.dto.AssetResponse;
-import Security_Scanner.Security_Scanner.dto.OwnershipCheckResult;
+import Security_Scanner.Security_Scanner.dto.asset.AssetRequest;
+import Security_Scanner.Security_Scanner.dto.asset.AssetResponse;
+import Security_Scanner.Security_Scanner.dto.asset.OwnershipCheckResult;
 import Security_Scanner.Security_Scanner.exception.ConflictException;
 import Security_Scanner.Security_Scanner.exception.ResourceNotFoundException;
 import Security_Scanner.Security_Scanner.mapper.AssetMapper;

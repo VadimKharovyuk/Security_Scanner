@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import Security_Scanner.Security_Scanner.dto.ProjectRequest;
-import Security_Scanner.Security_Scanner.dto.ProjectResponse;
+import Security_Scanner.Security_Scanner.dto.project.ProjectRequest;
+import Security_Scanner.Security_Scanner.dto.project.ProjectResponse;
 import Security_Scanner.Security_Scanner.service.AssetService;
 import Security_Scanner.Security_Scanner.service.ProjectService;
 import jakarta.validation.Valid;

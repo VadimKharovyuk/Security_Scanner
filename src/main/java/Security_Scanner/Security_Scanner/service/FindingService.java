@@ -9,8 +9,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import Security_Scanner.Security_Scanner.dto.FindingResponse;
-import Security_Scanner.Security_Scanner.dto.ScanFindingResponse;
+import Security_Scanner.Security_Scanner.dto.finding.FindingResponse;
+import Security_Scanner.Security_Scanner.dto.scanfinding.ScanFindingResponse;
 import Security_Scanner.Security_Scanner.enums.FindingStatus;
 import Security_Scanner.Security_Scanner.exception.ResourceNotFoundException;
 import Security_Scanner.Security_Scanner.mapper.FindingMapper;

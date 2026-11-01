@@ -4,9 +4,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import Security_Scanner.Security_Scanner.dto.ScanEventResponse;
-import Security_Scanner.Security_Scanner.dto.ScanResponse;
-import Security_Scanner.Security_Scanner.dto.ScanTaskResponse;
+import Security_Scanner.Security_Scanner.dto.scanevent.ScanEventResponse;
+import Security_Scanner.Security_Scanner.dto.scan.ScanResponse;
+import Security_Scanner.Security_Scanner.dto.scantask.ScanTaskResponse;
 import Security_Scanner.Security_Scanner.model.Scan;
 import Security_Scanner.Security_Scanner.model.ScanEvent;
 import Security_Scanner.Security_Scanner.model.ScanTask;

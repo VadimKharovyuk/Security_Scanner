@@ -12,12 +12,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import Security_Scanner.Security_Scanner.dto.AssetRequest;
-import Security_Scanner.Security_Scanner.dto.AssetResponse;
-import Security_Scanner.Security_Scanner.dto.ProjectRequest;
-import Security_Scanner.Security_Scanner.dto.ProjectResponse;
-import Security_Scanner.Security_Scanner.dto.ScanRequest;
-import Security_Scanner.Security_Scanner.dto.ScanResponse;
+import Security_Scanner.Security_Scanner.dto.asset.AssetRequest;
+import Security_Scanner.Security_Scanner.dto.asset.AssetResponse;
+import Security_Scanner.Security_Scanner.dto.project.ProjectRequest;
+import Security_Scanner.Security_Scanner.dto.project.ProjectResponse;
+import Security_Scanner.Security_Scanner.dto.scan.ScanRequest;
+import Security_Scanner.Security_Scanner.dto.scan.ScanResponse;
 import Security_Scanner.Security_Scanner.enums.ScanStatus;
 import Security_Scanner.Security_Scanner.enums.ScanTaskStatus;
 import Security_Scanner.Security_Scanner.repository.ScanEventRepository;

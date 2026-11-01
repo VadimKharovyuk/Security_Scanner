@@ -1,4 +1,4 @@
-package Security_Scanner.Security_Scanner.dto;
+package Security_Scanner.Security_Scanner.dto.project;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

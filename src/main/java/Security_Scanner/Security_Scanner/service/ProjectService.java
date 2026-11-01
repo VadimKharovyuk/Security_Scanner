@@ -7,8 +7,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import Security_Scanner.Security_Scanner.dto.ProjectRequest;
-import Security_Scanner.Security_Scanner.dto.ProjectResponse;
+import Security_Scanner.Security_Scanner.dto.project.ProjectRequest;
+import Security_Scanner.Security_Scanner.dto.project.ProjectResponse;
 import Security_Scanner.Security_Scanner.exception.ConflictException;
 import Security_Scanner.Security_Scanner.exception.ResourceNotFoundException;
 import Security_Scanner.Security_Scanner.mapper.ProjectMapper;

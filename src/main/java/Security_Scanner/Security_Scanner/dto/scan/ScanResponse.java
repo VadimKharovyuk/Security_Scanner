@@ -1,8 +1,10 @@
-package Security_Scanner.Security_Scanner.dto;
+package Security_Scanner.Security_Scanner.dto.scan;
 
 import java.time.Instant;
 import java.util.List;
 
+import Security_Scanner.Security_Scanner.dto.scanevent.ScanEventResponse;
+import Security_Scanner.Security_Scanner.dto.scantask.ScanTaskResponse;
 import Security_Scanner.Security_Scanner.enums.ScanStatus;
 
 /**
