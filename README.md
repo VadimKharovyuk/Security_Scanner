@@ -1,466 +1,102 @@
 # WebCraft AI Security Scanner
 
-Платформа автоматизированного анализа безопасности веб-приложений: обнаружение уязвимостей, построение сценариев атаки и **техническое подтверждение** их реального воздействия.
+A Spring Boot web app for reviewing the security configuration of websites. You add a site, run a scan, and get a report of findings with evidence and an optional AI explanation.
 
-Главная задача — не просто найти потенциальную уязвимость, а установить, насколько далеко злоумышленник может продвинуться от публичного веб-интерфейса к внутренним ресурсам и базе данных.
+All checks are passive: the scanner reads what a site returns and does not send attack requests. A report without findings does not mean the site is secure, and every report lists what was not checked.
 
----
+## Features
 
-## Содержание
+- **HTTP checks** — security headers, cookie flags, HTTPS redirect, server version disclosure.
+- **TLS checks** — certificate validity, trust and hostname, support for TLS 1.0 / 1.1.
+- **OWASP ZAP (optional)** — crawls the site's links and analyzes the responses; forms are not submitted.
+- **Reports** — findings grouped by rule and severity, in HTML and JSON.
+- **AI analysis (optional)** — explains a scan's findings through OpenRouter with read-only tools. It does not confirm vulnerabilities.
 
-- [Ключевая идея](#ключевая-идея)
-- [Принципы](#принципы)
-- [Текущий статус](#текущий-статус)
-- [Технологический стек](#технологический-стек)
-- [Структура проекта](#структура-проекта)
-- [Запуск](#запуск)
-- [Конфигурация](#конфигурация)
-- [База данных](#база-данных)
-- [REST API](#rest-api)
-- [Roadmap](#roadmap)
-- [Автор](#автор)
-- [Безопасность и правовые ограничения](#безопасность-и-правовые-ограничения)
+## Tech stack
 
----
+- Java 21, Spring Boot 4.1.2 (Web MVC, Data JPA / Hibernate)
+- PostgreSQL, Thymeleaf, Lombok
+- Spring AI 2.0 (`@Tool`), models via OpenRouter
+- OWASP ZAP 2.17 in Docker (optional)
 
-## Ключевая идея
-
-Обычный сканер отвечает на вопрос «какие уязвимости есть?». Этот проект отвечает на вопросы:
-
-- какие из обнаруженных уязвимостей действительно эксплуатируемы;
-- можно ли через них получить доступ к данным приложения;
-- можно ли прочитать данные из БД через уязвимый путь;
-- какие операции доступны: `READ`, `WRITE` или `ADMIN`;
-- какие переходы подтверждены техническими доказательствами, а какие остаются теоретическими;
-- какой реальный риск представляет обнаруженная цепочка.
-
-**Ключевое отличие:** заключения AI без технических доказательств не считаются подтверждением уязвимости.
-
----
-
-## Принципы
-
-### 1. Evidence-Based Security Analysis
-
-Каждая подтверждённая уязвимость имеет техническое доказательство: тип проверки, актив и URL, время, инструмент и версию, правило проверки, HTTP-метаданные, идентификаторы доказательств, результат валидации, уверенность и ограничения.
-
-### 2. Detected → Validated → Impact Confirmed
-
-Три раздельных состояния. Теоретический сценарий не переводится в подтверждённый автоматически.
-
-### 3. Разделение доступа
-
-- **Application-Mediated Database Access** — доступ к БД через уязвимость приложения и его существующее подключение.
-- **Direct Database Network Access** — прямой сетевой доступ к серверу БД.
-- **Infrastructure Access** — доступ к другим внутренним ресурсам.
-
-Успешная SQL Injection не означает прямой сетевой доступ к PostgreSQL. Каждый тип проверяется отдельно.
-
----
-
-## Текущий статус
-
-Проект в начале разработки. Реализовано:
-
-- [x] Каркас Spring Boot приложения
-- [x] Подключение к PostgreSQL
-- [x] Домашняя страница (Thymeleaf, без CSS)
-- [x] Базовые enum'ы доменной модели
-- [x] Сущности `Project` и `Asset`
-- [x] `AssetScopeService`
-- [x] Scan Orchestrator, HTTP Scanner и заглушка для тестов
-- [x] Finding Processor и Evidence Manager (HTTP-проверки)
-- [x] TLS Scanner
-- [x] OWASP ZAP: пассивный режим
-- [ ] OWASP ZAP: активный режим
-- [x] AI-анализ сканирования: инструменты только для чтения через OpenRouter
-- [ ] AI-слой для графа атак и классификации находок
-- [ ] Attack Graph
-- [ ] Validation Engine
-- [ ] Database Access Validation
-- [x] Отчёт по сканированию v1 (HTML и JSON)
-- [ ] Полный отчёт с графом атак и PDF
-
-### Реализованные enum'ы
-
-| Enum | Назначение |
-|---|---|
-| `ScanStatus` | Жизненный цикл сканирования |
-| `ScanTaskStatus` | Статус отдельной задачи |
-| `ScanEventType` | Тип события сканирования |
-| `ScannerType` | Тип сканера |
-| `FindingStatus` | Статус уязвимости |
-| `FindingCategory` | Категория находки |
-| `Severity` | Критичность |
-| `Confidence` | Уверенность |
-| `EvidenceType` | Тип технического доказательства |
-| `AttackPathEdgeStatus` | Статус перехода в графе атак |
-| `AccessType` | Тип доступа |
-| `AccessCapability` | Подтверждённые возможности (`READ`/`WRITE`/`EXECUTE`/`ADMIN`) |
-| `AiTaskType` | Тип задачи для AI-роутера |
-| `ValidationMode` | Режим проверки |
-| `ReportFormat` | Формат отчёта |
-
----
-
-## Технологический стек
-
-**Backend**
-
-- Java 21
-- Spring Boot 4.1.2
-- Spring Web MVC
-- Spring Data JPA / Hibernate
-- PostgreSQL
-- Lombok
-- Thymeleaf
-- Spring AI 2.0 (`@Tool`), модели через OpenRouter
-
-**Frontend**
-
-- Thymeleaf
-- HTML
-- JavaScript
-- CSS *(пока не используется)*
-
-**Планируется**
-
-- Spring Security (позже)
-- Docker для упаковки приложения под хостинг (в конце проекта)
-- Redis, Flyway — **не используются**
-
----
-
-## Структура проекта
-
-```
-src/main/java/Security_Scanner/Security_Scanner/
-├── config/        # конфигурация Spring
-├── controller/    # MVC-контроллеры
-├── dto/           # request/response модели, подпакеты по агрегатам
-│   ├── project/   # ProjectRequest, ProjectResponse
-│   ├── asset/     # AssetRequest, AssetResponse, OwnershipCheckResult
-│   ├── scan/      # ScanRequest, ScanResponse, ScanTaskResponse, ScanEventResponse
-│   └── finding/   # FindingResponse, ScanFindingResponse, SecurityEvidenceResponse
-├── enums/         # доменные перечисления
-├── exception/     # обработка ошибок
-├── mapper/        # ручные мапперы (без MapStruct)
-├── model/         # JPA-сущности
-├── repository/    # Spring Data репозитории
-└── service/       # бизнес-логика, подпакеты по доменам
-    ├── project/   # проекты
-    ├── asset/     # активы, область сканирования, проверка владения
-    ├── scan/      # жизненный цикл сканирования
-    ├── finding/   # находки и их каталог
-    └── scanner/   # контракт сканера и реализации (HTTP, TLS)
-        └── zap/   # пассивный анализ через OWASP ZAP
-```
-
-```
-src/main/resources/
-├── static/        # статические ресурсы
-├── templates/     # Thymeleaf-шаблоны
-└── application.properties
-```
-
----
-
-## Запуск
-
-### Требования
+## Requirements
 
 - JDK 21+
 - PostgreSQL 15+
-- Maven Wrapper (входит в проект)
+- Docker (only to run OWASP ZAP)
 
-### 1. Создать базу данных
+## Run
 
-```sql
-CREATE DATABASE "Security_Scanner";
-```
+1. Create the database:
 
-### 2. Настроить подключение
+   ```sql
+   CREATE DATABASE "Security_Scanner";
+   ```
 
-Параметры по умолчанию — в `src/main/resources/application.properties`. Пароль и ключи задаются в файле `.env` в корне проекта, он не попадает в git:
+2. Create a local `.env` file in the project root (it is not committed) and set the values:
 
-```bash
-cp .env.example .env              # задать DB_PASSWORD
-```
+   ```bash
+   cp .env.example .env
+   ```
 
-Приложение нужно запускать из корня проекта, иначе `.env` не будет найден. Адрес базы и пользователя можно переопределить через `DB_URL` и `DB_USERNAME`.
+   | Variable | Purpose |
+   |---|---|
+   | `DB_PASSWORD` | PostgreSQL password (required) |
+   | `ZAP_ENABLED` | `true` turns the ZAP scanner on |
+   | `ZAP_API_KEY` | ZAP API key: `openssl rand -hex 32` |
+   | `SCAN_LOCAL_PORTS` | localhost ports allowed as a scan target |
+   | `OPENROUTER_API_KEY` | OpenRouter key for AI analysis |
 
-### 3. Запустить
+   Override the database URL and user with `DB_URL` and `DB_USERNAME` if needed.
 
-```bash
-./mvnw spring-boot:run
-```
+3. Start the app from the project root (otherwise `.env` is not found):
 
-Приложение будет доступно на **http://localhost:2157/**.
+   ```bash
+   ./mvnw spring-boot:run
+   ```
 
-### Сборка
+   It is available at **http://localhost:2157/**.
+
+   To enable the ZAP scanner, set `ZAP_ENABLED=true` and `ZAP_API_KEY` in `.env`, then start ZAP:
+
+   ```bash
+   docker compose up -d
+   ```
+
+## Build
 
 ```bash
 ./mvnw clean package
 java -jar target/Security_Scanner-0.0.1-SNAPSHOT.jar
 ```
 
----
-
-## Конфигурация
-
-```properties
-spring.application.name=Security_Scanner
-server.port=2157
-
-# PostgreSQL
-spring.datasource.driver-class-name=org.postgresql.Driver
-spring.datasource.url=${DB_URL:jdbc:postgresql://localhost:5432/Security_Scanner}
-spring.datasource.username=${DB_USERNAME:postgres}
-spring.datasource.password=${DB_PASSWORD}
-
-# JPA / Hibernate
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=false
-spring.jpa.open-in-view=false
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
-spring.jpa.properties.hibernate.format_sql=true
-
-# Ownership verification: disabled (MVP) | required
-security-scanner.ownership.mode=disabled
-
-# Stub scanner for lifecycle tests
-security-scanner.stub.enabled=false
-
-# HTTP scanner
-security-scanner.http.enabled=true
-
-# TLS scanner
-security-scanner.tls.enabled=true
-
-# OWASP ZAP (passive only)
-security-scanner.zap.enabled=${ZAP_ENABLED:false}
-security-scanner.zap.url=${ZAP_URL:http://127.0.0.1:8090}
-security-scanner.zap.api-key=${ZAP_API_KEY:}
-
-# AI through OpenRouter. Without a key the application works without AI.
-app.openrouter.api-key=${OPENROUTER_API_KEY:}
-app.openrouter.base-url=https://openrouter.ai/api/v1
-app.openrouter.data-collection=deny
-app.openrouter.model=deepseek/deepseek-v4-flash-0731
-app.openrouter.temperature=0.3
-app.openrouter.max-tokens=8192
-
-# Per-task overrides: app.openrouter.tasks.<AiTaskType>.model | temperature | max-tokens
-app.openrouter.tasks.FINDING_ANALYSIS.temperature=0.2
-
-# Close scans interrupted by a restart
-security-scanner.recovery.enabled=true
-
-# Allowed scan scope
-security-scanner.scope.allowed-hosts=webscraft.org,www.webscraft.org
-security-scanner.scope.allow-subdomains=false
-
-# Local test target: only http(s)://localhost:<port> with these ports. Empty means localhost is blocked.
-security-scanner.scope.allowed-local-ports=${SCAN_LOCAL_PORTS:}
-```
-
-> ⚠️ `ddl-auto=update` используется только для разработки. Перед production схему нужно зафиксировать (`validate`) и перейти на управляемые миграции.
-
-> ℹ️ `hibernate.dialect` указан явно, хотя Hibernate 6+ определяет диалект автоматически и пишет об этом WARN. Строку можно удалить.
-
----
-
-## Сканирование и находки
-
-### UI-маршруты
-
-| Метод | Путь | Назначение |
-|---|---|---|
-| `GET` | `/scans` | Список сканирований |
-| `GET` | `/scans/{id}` | Статус, задачи, события и находки |
-| `POST` | `/assets/{id}/scans` | Запустить сканирование актива |
-| `POST` | `/scans/{id}/cancel` | Отменить сканирование |
-| `POST` | `/scans/{id}/delete` | Удалить сканирование вместе с находками |
-| `GET` | `/scans/{id}/report` | Отчёт по сканированию |
-| `GET` | `/api/reports/{id}` | Отчёт по сканированию в JSON |
-| `POST` | `/scans/{id}/analysis` | AI-анализ сканирования |
-| `GET` | `/findings` | Все находки |
-| `GET` | `/findings/{id}` | Находка и её доказательства |
-
-Страница сканирования обновляется автоматически, пока оно не завершено.
-
-### Отчёт
-
-Находки сгруппированы по правилам и отсортированы по критичности, ложные срабатывания видны только в сводке. Раздел «Ограничения проверки» перечисляет, что не было проверено: упавшие и пропущенные сканеры, отсутствие обхода сайта и то, что проверки только пассивные. Отчёт собирается из сохранённых данных и новых запросов к сайту не отправляет.
-
-### AI-анализ
-
-Кнопка «AI-анализ» на странице сканирования передаёт его результаты модели и показывает её пояснение. Для работы нужен `OPENROUTER_API_KEY` в `.env`, без него остальные функции приложения работают как обычно. Находки передаются OpenRouter и провайдеру модели.
-
-- Модель и параметры задаются общими настройками и могут переопределяться для каждого `AiTaskType`.
-- Инструменты модели только читают данные и привязаны к одному сканированию: `getScanOverview`, `searchFindings`, `getFinding`.
-- Запрос ограничен 10 вызовами инструментов, а `searchFindings` возвращает не больше 50 находок.
-- Содержимое сайтов считается недоверенным. Ответ не сохраняется, не меняет статусы находок и не подтверждает уязвимости.
-
-### Прерванные сканирования
-
-Сканирования выполняются внутри процесса приложения, поэтому при старте, до запуска веб-сервера, все незавершённые сканирования закрываются:
-
-- сканирование получает статус `FAILED`, а при запрошенной отмене — `CANCELLED`;
-- выполнявшиеся задачи получают статус `FAILED`, ожидавшие — `SKIPPED`;
-- уже сохранённые находки и завершённые задачи не меняются.
-
-Повторно сканирования не запускаются: новый трафик к цели отправляется только по запросу пользователя.
-
-Механизм рассчитан на один экземпляр приложения на базу данных: второй экземпляр при старте закроет сканирования первого. Запуск на такой базе отключается через `security-scanner.recovery.enabled=false`.
-
-Сканирование также получает `FAILED`, если очередь пула переполнена или при его выполнении произошла внутренняя ошибка. При обычной остановке приложение ждёт завершения сканирований до 60 секунд.
-
-### HTTP-проверки
-
-| Код | Критичность | Что проверяется |
-|---|---|---|
-| `NO_HTTPS_REDIRECT` | HIGH | Итоговый ответ получен по HTTP |
-| `MISSING_HSTS` | MEDIUM | Нет `Strict-Transport-Security` |
-| `MISSING_X_CONTENT_TYPE_OPTIONS` | MEDIUM | Нет `X-Content-Type-Options` |
-| `MISSING_X_FRAME_OPTIONS` | MEDIUM | Нет `X-Frame-Options` и `frame-ancestors` в CSP |
-| `MISSING_CONTENT_SECURITY_POLICY` | MEDIUM | Нет `Content-Security-Policy` |
-| `INSECURE_COOKIE` | MEDIUM | Cookie без `Secure`, `HttpOnly` или `SameSite` |
-| `MISSING_REFERRER_POLICY` | LOW | Нет `Referrer-Policy` |
-| `MISSING_PERMISSIONS_POLICY` | LOW | Нет `Permissions-Policy` |
-| `SERVER_VERSION_DISCLOSURE` | LOW | `Server` содержит версию |
-| `X_POWERED_BY_DISCLOSURE` | LOW | Присутствует `X-Powered-By` |
-
-### TLS-проверки
-
-Выполняются только для активов с `https`.
-
-| Код | Критичность | Что проверяется |
-|---|---|---|
-| `TLS_CERTIFICATE_EXPIRED` | HIGH | Срок действия сертификата истёк |
-| `TLS_CERTIFICATE_NOT_YET_VALID` | HIGH | Сертификат ещё не начал действовать |
-| `TLS_CERTIFICATE_UNTRUSTED` | HIGH | Стандартный trust store отклонил цепочку |
-| `TLS_HOSTNAME_MISMATCH` | HIGH | Сертификат не соответствует имени хоста |
-| `TLS_CERTIFICATE_EXPIRING_SOON` | MEDIUM | До окончания срока меньше 30 дней |
-| `TLS_CERTIFICATE_SELF_SIGNED` | MEDIUM | Subject и Issuer совпадают |
-| `TLS_WEAK_PROTOCOL` | MEDIUM | Сервер принимает TLS 1.0 или TLS 1.1 |
-
-JDK запрещает TLS 1.0 и 1.1, поэтому их поддержка определяется по ответу сервера на вручную сформированный ClientHello. Если сервер работает только с версиями или шифрами, запрещёнными в JDK, сертификат прочитать нельзя, и в отчёт попадает только `TLS_WEAK_PROTOCOL`.
-
-### OWASP ZAP
-
-Сканер выключен по умолчанию: при включении каждое сканирование обходит страницы актива. Для запуска нужен Docker:
+## Tests
 
 ```bash
-cp .env.example .env              # задать ZAP_API_KEY и ZAP_ENABLED=true
-docker compose up -d
+./mvnw test
 ```
 
-Выполняется только пассивный анализ, атакующие запросы не отправляются:
+Tests need a local PostgreSQL. `@SpringBootTest` tests use the local development database.
 
-- обход ограничен хостом и портом актива, поддомены и другие сайты исключены;
-- формы не отправляются, обход ограничен глубиной 5, 5 минутами и 2 потоками;
-- spider всё же открывает все найденные ссылки методом GET, включая ссылки вида `/logout`;
-- находки вне актива отбрасываются повторно, query-параметры в URL не сохраняются, секреты в доказательствах редактируются;
-- правила ZAP добавляются в каталог `findings` при первом обнаружении с кодом `ZAP_<id правила>`;
-- одновременно выполняется одно сканирование ZAP, остальные ждут своей очереди.
+## Routes
 
-Каталог `findings` синхронизируется при старте приложения с определениями, которые объявляют сканеры. Значения cookie в доказательствах редактируются (`<redacted>`).
-
----
-
-## База данных
-
-- СУБД: **PostgreSQL**
-- База: `Security_Scanner`
-- Миграции: **Flyway не используется** — схема управляется Hibernate (`ddl-auto=update`)
-- Таблицы создаются автоматически по JPA-сущностям
-
-### Реализованные сущности
-
-**Core:** `Project`, `Asset`, `Scan`, `ScanTask`, `ScanEvent`, `Finding`, `ScanFinding`
-
-**Evidence:** `SecurityEvidence`
-
-### Планируемые сущности
-
-`ScanProfile`, `ScannerExecution`, `VulnerabilityReference`, `AttackPath`, `AttackPathNode`, `AttackPathEdge`, `ValidationRun`, `ValidationAttempt`, `DatabaseAccessEvidence`, `CanaryRecord`, `AccessCapability`, `AIAnalysis`, `AIExecution`, `PromptVersion`, `Report`, `ReportSection`
-
----
-
-## REST API
-
-Планируемые эндпоинты:
-
-| Метод | Путь | Назначение |
+| Method | Path | Purpose |
 |---|---|---|
-| `POST` | `/api/projects` | Создать проект |
-| `GET` | `/api/projects` | Список проектов |
-| `GET` | `/api/projects/{id}` | Проект по ID |
-| `POST` | `/api/assets` | Добавить актив |
-| `GET` | `/api/assets` | Список активов |
-| `GET` | `/api/assets/{id}` | Актив по ID |
-| `DELETE` | `/api/assets/{id}` | Удалить актив |
-| `POST` | `/api/scans` | Запустить сканирование |
-| `GET` | `/api/scans` | Список сканирований |
-| `GET` | `/api/scans/{id}` | Сканирование по ID |
-| `POST` | `/api/scans/{id}/cancel` | Отменить сканирование |
-| `GET` | `/api/findings` | Список находок |
-| `GET` | `/api/findings/{id}` | Находка по ID |
-| `GET` | `/api/attack-paths` | Список цепочек атак |
-| `GET` | `/api/attack-paths/{id}` | Цепочка по ID |
-| `GET` | `/api/validations` | Список проверок |
-| `GET` | `/api/validations/{id}` | Проверка по ID |
-| `GET` | `/api/database-access` | Результаты доступа к БД |
-| `GET` | `/api/database-access/{id}` | Результат по ID |
+| `GET` | `/projects` | Projects; add a site as an asset here |
+| `POST` | `/assets/{id}/scans` | Start a scan of an asset |
+| `GET` | `/scans/{id}` | Scan status, tasks, events and findings |
+| `GET` | `/scans/{id}/report` | Scan report (HTML) |
+| `GET` | `/api/reports/{id}` | Scan report (JSON) |
+| `POST` | `/scans/{id}/analysis` | AI analysis of a scan |
+| `GET` | `/findings/{id}` | A finding and its evidence |
 
----
-
-## Roadmap
-
-| Этап | Содержание |
-|---|---|
-| 1 | Каркас проекта, PostgreSQL, `Project`, `Asset`, `AssetScopeService` |
-| 2 | HTTP Scanner, TLS Scanner, OWASP ZAP, Scan Orchestrator |
-| 3 | Finding Processor, Evidence Manager |
-| 4 | AI-слой: Spring AI `@Tool` через OpenRouter, валидация ответов |
-| 5 | Attack Graph Engine |
-| 6 | Database Access Validation Engine, Canary Records, `READ`/`WRITE`/`ADMIN` |
-| 7 | Report Engine (HTML / PDF / JSON) |
-| 8 | Hardening: SSRF, DNS rebinding, изоляция workers, audit logging |
-| 9 | Docker-упаковка приложения для хостинга |
-
----
-
-## Автор
+## Author
 
 **Vadim Harovyuk** — Java Backend Developer.
 
-- Статья об авторе: [Java backend-разработчик Vadim Harovyuk](https://webscraft.org/blog/java-backend-rozrobnik-vadim-harovyuk)
-- Блог проекта: [webscraft.org/blog](https://webscraft.org/blog)
+- About the author: [Java backend developer Vadim Harovyuk](https://webscraft.org/blog/java-backend-rozrobnik-vadim-harovyuk)
+- Project blog: [webscraft.org/blog](https://webscraft.org/blog)
 
----
+## Security note
 
-## Безопасность и правовые ограничения
-
-Платформа сканирует только те ресурсы, на которые у пользователя есть явное разрешение.
-
-**Обязательные технические ограничения:**
-
-- проверка `allowed-hosts` перед **каждым** сетевым соединением;
-- блокировка `localhost`, private/link-local IP, cloud metadata endpoints;
-- защита от SSRF и DNS rebinding;
-- запрет редиректов за пределы разрешённой области;
-- таймауты, лимиты размера ответов и числа запросов;
-- редактирование секретов и персональных данных перед сохранением и передачей в LLM;
-- AI не имеет произвольного доступа к shell, SSH, production DB и секретам;
-- AI не может самостоятельно перевести Finding в `CONFIRMED` или объявить `READ`/`WRITE`/`ADMIN` без технических доказательств;
-- запрещены разрушительные операции и массовое извлечение пользовательских данных.
-
-**MVP не включает:** автоматическое исправление уязвимостей, изменение production-конфигурации, постоянный SSH/root-доступ, постоянные привилегированные DB credentials, массовое сканирование произвольных доменов, анализ исходного кода.
-
----
-
-## Лицензия
-
-Не указана.
+The scanner performs passive checks only. Run it only against sites you are allowed to test. Network access is restricted to the asset's host and port, and local targets are limited to `localhost` on the ports listed in `SCAN_LOCAL_PORTS`.
