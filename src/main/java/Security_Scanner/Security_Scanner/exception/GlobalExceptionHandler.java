@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,6 +18,11 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(ResourceNotFoundException.class)
 	public ModelAndView handleNotFound(ResourceNotFoundException exception) {
 		return errorView(HttpStatus.NOT_FOUND, "Не найдено", exception.getMessage());
+	}
+
+	@ExceptionHandler(NoResourceFoundException.class)
+	public ModelAndView handleNoResource(NoResourceFoundException exception) {
+		return errorView(HttpStatus.NOT_FOUND, "Не найдено", "Страница не найдена");
 	}
 
 	@ExceptionHandler(ConflictException.class)
