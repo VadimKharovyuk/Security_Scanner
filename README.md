@@ -134,7 +134,15 @@
 src/main/java/Security_Scanner/Security_Scanner/
 ├── config/        # конфигурация Spring
 ├── controller/    # MVC-контроллеры
-├── dto/           # request/response модели
+├── dto/           # request/response модели, подпакеты по сущностям
+│   ├── project/   # ProjectRequest, ProjectResponse
+│   ├── asset/     # AssetRequest, AssetResponse, OwnershipCheckResult
+│   ├── scan/      # ScanRequest, ScanResponse
+│   ├── scantask/  # ScanTaskResponse
+│   ├── scanevent/ # ScanEventResponse
+│   ├── finding/   # FindingResponse
+│   ├── scanfinding/ # ScanFindingResponse
+│   └── evidence/  # SecurityEvidenceResponse
 ├── enums/         # доменные перечисления
 ├── exception/     # обработка ошибок
 ├── mapper/        # ручные мапперы (без MapStruct)
