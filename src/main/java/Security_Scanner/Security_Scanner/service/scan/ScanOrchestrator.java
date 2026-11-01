@@ -1,4 +1,4 @@
-package Security_Scanner.Security_Scanner.service;
+package Security_Scanner.Security_Scanner.service.scan;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -28,6 +28,10 @@ import Security_Scanner.Security_Scanner.model.ScanTask;
 import Security_Scanner.Security_Scanner.repository.ScanEventRepository;
 import Security_Scanner.Security_Scanner.repository.ScanRepository;
 import Security_Scanner.Security_Scanner.repository.ScanTaskRepository;
+import Security_Scanner.Security_Scanner.service.asset.AssetService;
+import Security_Scanner.Security_Scanner.service.finding.FindingService;
+import Security_Scanner.Security_Scanner.service.scanner.ScanResult;
+import Security_Scanner.Security_Scanner.service.scanner.SecurityScanner;
 import lombok.RequiredArgsConstructor;
 
 /**

@@ -1,4 +1,4 @@
-package Security_Scanner.Security_Scanner.service;
+package Security_Scanner.Security_Scanner.service.asset;
 
 import Security_Scanner.Security_Scanner.dto.asset.OwnershipCheckResult;
 import Security_Scanner.Security_Scanner.model.Asset;

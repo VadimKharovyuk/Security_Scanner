@@ -1,4 +1,4 @@
-package Security_Scanner.Security_Scanner.service;
+package Security_Scanner.Security_Scanner.service.scanner;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -31,6 +31,7 @@ import Security_Scanner.Security_Scanner.enums.FindingCategory;
 import Security_Scanner.Security_Scanner.enums.ScannerType;
 import Security_Scanner.Security_Scanner.enums.Severity;
 import Security_Scanner.Security_Scanner.exception.ScopeViolationException;
+import Security_Scanner.Security_Scanner.service.asset.AssetScopeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

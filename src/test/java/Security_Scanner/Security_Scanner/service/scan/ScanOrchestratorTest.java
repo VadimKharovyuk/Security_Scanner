@@ -1,4 +1,4 @@
-package Security_Scanner.Security_Scanner.service;
+package Security_Scanner.Security_Scanner.service.scan;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -21,6 +21,8 @@ import Security_Scanner.Security_Scanner.dto.scan.ScanResponse;
 import Security_Scanner.Security_Scanner.enums.ScanStatus;
 import Security_Scanner.Security_Scanner.enums.ScanTaskStatus;
 import Security_Scanner.Security_Scanner.repository.ScanEventRepository;
+import Security_Scanner.Security_Scanner.service.asset.AssetService;
+import Security_Scanner.Security_Scanner.service.project.ProjectService;
 
 @SpringBootTest(properties = {
 		"security-scanner.scope.allowed-hosts=8.8.8.8",

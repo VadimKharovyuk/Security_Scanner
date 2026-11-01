@@ -1,4 +1,4 @@
-package Security_Scanner.Security_Scanner.service;
+package Security_Scanner.Security_Scanner.service.asset;
 
 import java.util.List;
 
@@ -16,6 +16,7 @@ import Security_Scanner.Security_Scanner.mapper.AssetMapper;
 import Security_Scanner.Security_Scanner.model.Asset;
 import Security_Scanner.Security_Scanner.model.Project;
 import Security_Scanner.Security_Scanner.repository.AssetRepository;
+import Security_Scanner.Security_Scanner.service.project.ProjectService;
 import lombok.RequiredArgsConstructor;
 
 /**

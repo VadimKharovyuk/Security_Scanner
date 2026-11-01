@@ -1,4 +1,4 @@
-package Security_Scanner.Security_Scanner.service;
+package Security_Scanner.Security_Scanner.service.scan;
 
 import java.util.List;
 import java.util.Map;
@@ -12,6 +12,9 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import Security_Scanner.Security_Scanner.enums.ScannerType;
 import Security_Scanner.Security_Scanner.event.ScanCreatedEvent;
+import Security_Scanner.Security_Scanner.service.scanner.ScanContext;
+import Security_Scanner.Security_Scanner.service.scanner.ScanResult;
+import Security_Scanner.Security_Scanner.service.scanner.SecurityScanner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

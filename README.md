@@ -145,7 +145,12 @@ src/main/java/Security_Scanner/Security_Scanner/
 ├── mapper/        # ручные мапперы (без MapStruct)
 ├── model/         # JPA-сущности
 ├── repository/    # Spring Data репозитории
-└── service/       # бизнес-логика
+└── service/       # бизнес-логика, подпакеты по доменам
+    ├── project/   # проекты
+    ├── asset/     # активы, область сканирования, проверка владения
+    ├── scan/      # жизненный цикл сканирования
+    ├── finding/   # находки и их каталог
+    └── scanner/   # контракт сканера и реализации (HTTP, TLS)
 ```
 
 ```

@@ -1,10 +1,13 @@
-package Security_Scanner.Security_Scanner.service;
+package Security_Scanner.Security_Scanner.service.finding;
 
 import java.util.List;
 
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
+
+import Security_Scanner.Security_Scanner.service.scanner.FindingDefinition;
+import Security_Scanner.Security_Scanner.service.scanner.SecurityScanner;
 
 import lombok.RequiredArgsConstructor;
 

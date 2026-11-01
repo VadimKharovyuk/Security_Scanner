@@ -1,4 +1,4 @@
-package Security_Scanner.Security_Scanner.service;
+package Security_Scanner.Security_Scanner.service.finding;
 
 import java.time.Instant;
 import java.util.List;
@@ -21,6 +21,9 @@ import Security_Scanner.Security_Scanner.model.SecurityEvidence;
 import Security_Scanner.Security_Scanner.repository.FindingRepository;
 import Security_Scanner.Security_Scanner.repository.ScanFindingRepository;
 import Security_Scanner.Security_Scanner.repository.SecurityEvidenceRepository;
+import Security_Scanner.Security_Scanner.service.scanner.EvidenceDraft;
+import Security_Scanner.Security_Scanner.service.scanner.FindingDefinition;
+import Security_Scanner.Security_Scanner.service.scanner.FindingDraft;
 import lombok.RequiredArgsConstructor;
 
 /**

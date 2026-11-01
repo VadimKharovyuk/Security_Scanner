@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import Security_Scanner.Security_Scanner.dto.project.ProjectRequest;
 import Security_Scanner.Security_Scanner.dto.project.ProjectResponse;
-import Security_Scanner.Security_Scanner.service.AssetService;
-import Security_Scanner.Security_Scanner.service.ProjectService;
+import Security_Scanner.Security_Scanner.service.asset.AssetService;
+import Security_Scanner.Security_Scanner.service.project.ProjectService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 

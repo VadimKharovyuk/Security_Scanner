@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import Security_Scanner.Security_Scanner.dto.finding.ScanFindingResponse;
 import Security_Scanner.Security_Scanner.dto.scan.ScanResponse;
-import Security_Scanner.Security_Scanner.service.AssetService;
-import Security_Scanner.Security_Scanner.service.FindingService;
-import Security_Scanner.Security_Scanner.service.ScanOrchestrator;
+import Security_Scanner.Security_Scanner.service.asset.AssetService;
+import Security_Scanner.Security_Scanner.service.finding.FindingService;
+import Security_Scanner.Security_Scanner.service.scan.ScanOrchestrator;
 import lombok.RequiredArgsConstructor;
 
 @Controller
