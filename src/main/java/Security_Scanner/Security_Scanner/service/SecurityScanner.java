@@ -1,5 +1,7 @@
 package Security_Scanner.Security_Scanner.service;
 
+import java.util.List;
+
 import Security_Scanner.Security_Scanner.enums.ScannerType;
 
 /**
@@ -11,5 +13,13 @@ public interface SecurityScanner {
 	ScannerType getType();
 
 	ScanResult execute(ScanContext context);
+
+	/**
+	 * Правила проверки, которые сканер умеет обнаруживать.
+	 * Используются для синхронизации каталога Finding.
+	 */
+	default List<FindingDefinition> getDefinitions() {
+		return List.of();
+	}
 
 }

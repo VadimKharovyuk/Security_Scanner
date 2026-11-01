@@ -66,10 +66,11 @@
 - [x] Подключение к PostgreSQL
 - [x] Домашняя страница (Thymeleaf, без CSS)
 - [x] Базовые enum'ы доменной модели
-- [ ] Сущности `Project` и `Asset`
-- [ ] `AssetScopeService`
-- [ ] Scan Orchestrator и сканеры
-- [ ] Finding Processor и Evidence Manager
+- [x] Сущности `Project` и `Asset`
+- [x] `AssetScopeService`
+- [x] Scan Orchestrator, HTTP Scanner и заглушка для тестов
+- [x] Finding Processor и Evidence Manager (HTTP-проверки)
+- [ ] TLS Scanner и OWASP ZAP
 - [ ] AI-слой
 - [ ] Attack Graph
 - [ ] Validation Engine
@@ -82,10 +83,13 @@
 |---|---|
 | `ScanStatus` | Жизненный цикл сканирования |
 | `ScanTaskStatus` | Статус отдельной задачи |
+| `ScanEventType` | Тип события сканирования |
 | `ScannerType` | Тип сканера |
 | `FindingStatus` | Статус уязвимости |
+| `FindingCategory` | Категория находки |
 | `Severity` | Критичность |
 | `Confidence` | Уверенность |
+| `EvidenceType` | Тип технического доказательства |
 | `AttackPathEdgeStatus` | Статус перехода в графе атак |
 | `AccessType` | Тип доступа |
 | `AccessCapability` | Подтверждённые возможности (`READ`/`WRITE`/`EXECUTE`/`ADMIN`) |
@@ -207,6 +211,19 @@ spring.jpa.show-sql=false
 spring.jpa.open-in-view=false
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 spring.jpa.properties.hibernate.format_sql=true
+
+# Ownership verification: disabled (MVP) | required
+security-scanner.ownership.mode=disabled
+
+# Stub scanner for lifecycle tests
+security-scanner.stub.enabled=false
+
+# HTTP scanner
+security-scanner.http.enabled=true
+
+# Allowed scan scope
+security-scanner.scope.allowed-hosts=webscraft.org,www.webscraft.org
+security-scanner.scope.allow-subdomains=false
 ```
 
 > ⚠️ `ddl-auto=update` используется только для разработки. Перед production схему нужно зафиксировать (`validate`) и перейти на управляемые миграции.
@@ -217,6 +234,41 @@ spring.jpa.properties.hibernate.format_sql=true
 
 ---
 
+## Сканирование и находки
+
+### UI-маршруты
+
+| Метод | Путь | Назначение |
+|---|---|---|
+| `GET` | `/scans` | Список сканирований |
+| `GET` | `/scans/{id}` | Статус, задачи, события и находки |
+| `POST` | `/assets/{id}/scans` | Запустить сканирование актива |
+| `POST` | `/scans/{id}/cancel` | Отменить сканирование |
+| `POST` | `/scans/{id}/delete` | Удалить сканирование вместе с находками |
+| `GET` | `/findings` | Все находки |
+| `GET` | `/findings/{id}` | Находка и её доказательства |
+
+Страница сканирования обновляется автоматически, пока оно не завершено.
+
+### HTTP-проверки
+
+| Код | Критичность | Что проверяется |
+|---|---|---|
+| `NO_HTTPS_REDIRECT` | HIGH | Итоговый ответ получен по HTTP |
+| `MISSING_HSTS` | MEDIUM | Нет `Strict-Transport-Security` |
+| `MISSING_X_CONTENT_TYPE_OPTIONS` | MEDIUM | Нет `X-Content-Type-Options` |
+| `MISSING_X_FRAME_OPTIONS` | MEDIUM | Нет `X-Frame-Options` и `frame-ancestors` в CSP |
+| `MISSING_CONTENT_SECURITY_POLICY` | MEDIUM | Нет `Content-Security-Policy` |
+| `INSECURE_COOKIE` | MEDIUM | Cookie без `Secure`, `HttpOnly` или `SameSite` |
+| `MISSING_REFERRER_POLICY` | LOW | Нет `Referrer-Policy` |
+| `MISSING_PERMISSIONS_POLICY` | LOW | Нет `Permissions-Policy` |
+| `SERVER_VERSION_DISCLOSURE` | LOW | `Server` содержит версию |
+| `X_POWERED_BY_DISCLOSURE` | LOW | Присутствует `X-Powered-By` |
+
+Каталог `findings` синхронизируется при старте приложения с определениями, которые объявляют сканеры. Значения cookie в доказательствах редактируются (`<redacted>`).
+
+---
+
 ## База данных
 
 - СУБД: **PostgreSQL**
@@ -224,19 +276,15 @@ spring.jpa.properties.hibernate.format_sql=true
 - Миграции: **Flyway не используется** — схема управляется Hibernate (`ddl-auto=update`)
 - Таблицы создаются автоматически по JPA-сущностям
 
-### Планируемые сущности
+### Реализованные сущности
 
-**Core:** `Project`, `Asset`, `ScanProfile`, `Scan`, `ScanTask`, `ScanEvent`, `ScannerExecution`, `Finding`, `ScanFinding`, `VulnerabilityReference`
-
-**Attack Graph:** `AttackPath`, `AttackPathNode`, `AttackPathEdge`, `ValidationRun`
-
-**Database Access:** `ValidationAttempt`, `DatabaseAccessEvidence`, `CanaryRecord`, `AccessCapability`
+**Core:** `Project`, `Asset`, `Scan`, `ScanTask`, `ScanEvent`, `Finding`, `ScanFinding`
 
 **Evidence:** `SecurityEvidence`
 
-**AI:** `AIAnalysis`, `AIExecution`, `PromptVersion`
+### Планируемые сущности
 
-**Report:** `Report`, `ReportSection`
+`ScanProfile`, `ScannerExecution`, `VulnerabilityReference`, `AttackPath`, `AttackPathNode`, `AttackPathEdge`, `ValidationRun`, `ValidationAttempt`, `DatabaseAccessEvidence`, `CanaryRecord`, `AccessCapability`, `AIAnalysis`, `AIExecution`, `PromptVersion`, `Report`, `ReportSection`
 
 ---
 

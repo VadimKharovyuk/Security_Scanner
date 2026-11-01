@@ -55,6 +55,37 @@
 			</form>
 		</p>
 
+		<h2>Находки</h2>
+		<table border="1" cellpadding="6" cellspacing="0">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Критичность</th>
+					<th>Код</th>
+					<th>Название</th>
+					<th>Уверенность</th>
+					<th>URL</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="finding : ${findings}">
+					<td>
+						<a th:href="@{/findings/{id}(id=${finding.id})}" th:text="${finding.id}">1</a>
+					</td>
+					<td th:text="${finding.severity}">MEDIUM</td>
+					<td th:text="${finding.code}">MISSING_HSTS</td>
+					<td>
+						<a th:href="@{/findings/{id}(id=${finding.id})}" th:text="${finding.title}">Название</a>
+					</td>
+					<td th:text="${finding.confidence}">HIGH</td>
+					<td th:text="${finding.url}">https://example.com</td>
+				</tr>
+				<tr th:if="${#lists.isEmpty(findings)}">
+					<td colspan="6">Находок нет</td>
+				</tr>
+			</tbody>
+		</table>
+
 		<h2>Задачи</h2>
 		<table border="1" cellpadding="6" cellspacing="0">
 			<thead>

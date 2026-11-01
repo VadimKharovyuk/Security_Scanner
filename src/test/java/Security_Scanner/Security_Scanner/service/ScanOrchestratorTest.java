@@ -22,7 +22,11 @@ import Security_Scanner.Security_Scanner.enums.ScanStatus;
 import Security_Scanner.Security_Scanner.enums.ScanTaskStatus;
 import Security_Scanner.Security_Scanner.repository.ScanEventRepository;
 
-@SpringBootTest(properties = "security-scanner.scope.allowed-hosts=8.8.8.8")
+@SpringBootTest(properties = {
+		"security-scanner.scope.allowed-hosts=8.8.8.8",
+		"security-scanner.stub.enabled=true",
+		"security-scanner.http.enabled=false"
+})
 class ScanOrchestratorTest {
 
 	@Autowired

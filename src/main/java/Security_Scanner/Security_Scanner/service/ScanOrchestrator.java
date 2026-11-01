@@ -45,6 +45,7 @@ public class ScanOrchestrator {
 	private final ScanTaskRepository scanTaskRepository;
 	private final ScanEventRepository scanEventRepository;
 	private final AssetService assetService;
+	private final FindingService findingService;
 	private final ScanMapper scanMapper;
 	private final List<SecurityScanner> scanners;
 	private final ApplicationEventPublisher eventPublisher;
@@ -143,6 +144,7 @@ public class ScanOrchestrator {
 	@Transactional
 	public void delete(Long id) {
 		Scan scan = getEntity(id);
+		findingService.deleteByScan(id);
 		scanEventRepository.deleteByScanId(id);
 		scanTaskRepository.deleteByScanId(id);
 		scanRepository.delete(scan);
@@ -186,8 +188,16 @@ public class ScanOrchestrator {
 		task.setFinishedAt(Instant.now());
 		task.setErrorMessage(null);
 		scanTaskRepository.save(task);
-		addEvent(task.getScan(), ScanEventType.TASK_COMPLETED,
-				"Задача " + task.getScannerType() + ": " + result.message());
+
+		Scan scan = task.getScan();
+		findingService.record(scan, result.findings());
+
+		String message = "Задача " + task.getScannerType() + ": " + result.message();
+		if (!result.findings().isEmpty()) {
+			message += " (находок: " + result.findings().size() + ")";
+		}
+
+		addEvent(scan, ScanEventType.TASK_COMPLETED, message);
 	}
 
 	@Transactional

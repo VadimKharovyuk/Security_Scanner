@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import Security_Scanner.Security_Scanner.dto.ScanRequest;
 import Security_Scanner.Security_Scanner.dto.ScanResponse;
 import Security_Scanner.Security_Scanner.service.AssetService;
+import Security_Scanner.Security_Scanner.service.FindingService;
 import Security_Scanner.Security_Scanner.service.ScanOrchestrator;
 import lombok.RequiredArgsConstructor;
 
@@ -21,6 +22,7 @@ public class ScanController {
 
 	private final ScanOrchestrator scanOrchestrator;
 	private final AssetService assetService;
+	private final FindingService findingService;
 
 	@GetMapping("/scans")
 	public String list(@RequestParam(defaultValue = "0") int page, Model model) {
@@ -42,6 +44,7 @@ public class ScanController {
 
 		model.addAttribute("scan", scan);
 		model.addAttribute("asset", assetService.findById(scan.assetId()));
+		model.addAttribute("findings", findingService.findByScan(id));
 
 		return "scans/detail";
 	}
