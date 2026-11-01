@@ -16,6 +16,7 @@ import Security_Scanner.Security_Scanner.dto.AssetResponse;
 import Security_Scanner.Security_Scanner.dto.ProjectResponse;
 import Security_Scanner.Security_Scanner.service.AssetService;
 import Security_Scanner.Security_Scanner.service.ProjectService;
+import Security_Scanner.Security_Scanner.service.ScanOrchestrator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -25,6 +26,7 @@ public class AssetController {
 
 	private final AssetService assetService;
 	private final ProjectService projectService;
+	private final ScanOrchestrator scanOrchestrator;
 
 	@GetMapping("/assets")
 	public String list(@RequestParam(defaultValue = "0") int page, Model model) {
@@ -46,6 +48,7 @@ public class AssetController {
 
 		model.addAttribute("asset", asset);
 		model.addAttribute("project", projectService.findById(asset.projectId()));
+		model.addAttribute("scans", scanOrchestrator.findByAsset(id, 0));
 
 		return "assets/detail";
 	}

@@ -44,6 +44,35 @@
 			  onsubmit="return confirm('Удалить актив?')">
 			<button type="submit">Удалить</button>
 		</form>
+
+		<h2>Сканирования</h2>
+		<form th:if="${asset.active}" th:action="@{/assets/{id}/scans(id=${asset.id})}" method="post">
+			<button type="submit">Запустить сканирование</button>
+		</form>
+
+		<table border="1" cellpadding="6" cellspacing="0">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Статус</th>
+					<th>Создан</th>
+					<th>Завершён</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="scan : ${scans}">
+					<td>
+						<a th:href="@{/scans/{id}(id=${scan.id})}" th:text="${scan.id}">1</a>
+					</td>
+					<td th:text="${scan.status}">QUEUED</td>
+					<td th:text="${scan.createdAt}">2026-01-01</td>
+					<td th:text="${scan.finishedAt != null ? scan.finishedAt : '—'}">—</td>
+				</tr>
+				<tr th:if="${#lists.isEmpty(scans)}">
+					<td colspan="4">Сканирований пока нет</td>
+				</tr>
+			</tbody>
+		</table>
 	</main>
 </body>
 </html>

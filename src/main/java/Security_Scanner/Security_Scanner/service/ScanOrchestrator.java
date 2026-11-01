@@ -269,6 +269,13 @@ public class ScanOrchestrator {
 				.orElseThrow(() -> new ResourceNotFoundException("Сканирование не найдено: " + id));
 	}
 
+	private ScanResponse toResponse(Scan scan) {
+		return scanMapper.toResponse(
+				scan,
+				scanTaskRepository.findByScanIdOrderByIdAsc(scan.getId()),
+				scanEventRepository.findByScanIdOrderByCreatedAtAsc(scan.getId()));
+	}
+
 	private ScanTask getTask(Long taskId) {
 		return scanTaskRepository.findById(taskId)
 				.orElseThrow(() -> new ResourceNotFoundException("Задача сканирования не найдена: " + taskId));
