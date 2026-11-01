@@ -21,6 +21,11 @@ public class ZapProperties {
 
 	private String apiKey;
 
+	/**
+	 * Имя компьютера с приложением, как его видит ZAP: для контейнера localhost — это сам контейнер.
+	 */
+	private String localTargetHost = "host.docker.internal";
+
 	private Duration timeout = Duration.ofMinutes(10);
 
 	private Duration pollInterval = Duration.ofSeconds(2);

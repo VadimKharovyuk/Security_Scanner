@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import Security_Scanner.Security_Scanner.config.ZapProperties;
 import Security_Scanner.Security_Scanner.enums.ScannerType;
@@ -38,6 +39,8 @@ public class ZapScanner implements SecurityScanner {
 	private static final int ALERTS_PAGE_SIZE = 500;
 
 	private static final int MAX_ALERTS = 5000;
+
+	private static final String LOCAL_HOST = "localhost";
 
 	private final AssetScopeService assetScopeService;
 	private final ZapClient zap;
@@ -115,13 +118,14 @@ public class ZapScanner implements SecurityScanner {
 			throws IOException, InterruptedException {
 
 		URI target = URI.create(url);
+		URI zapTarget = reachableFromZap(target);
 		String contextName = "scan-" + context.scanId();
 
 		zap.newSession();
-		zap.createContext(contextName, scopeRegex(target));
+		zap.createContext(contextName, scopeRegex(zapTarget));
 		zap.configureSpider(properties.getMaxDepth(), properties.getMaxSpiderMinutes(), properties.getSpiderThreads());
 
-		String spiderId = zap.startSpider(url, contextName);
+		String spiderId = zap.startSpider(zapTarget.toString(), contextName);
 
 		Outcome spider = awaitSpider(spiderId, context, deadline);
 		if (spider == Outcome.CANCELLED) {
@@ -133,13 +137,43 @@ public class ZapScanner implements SecurityScanner {
 			return ScanResult.failure("Сканирование ZAP отменено", startedAt);
 		}
 
-		List<FindingDraft> found = ZapAlertMapper.toFindings(loadAlerts(url), target);
+		List<ZapAlert> alerts = withAssetHost(loadAlerts(zapTarget.toString()), zapTarget, target);
+		List<FindingDraft> found = ZapAlertMapper.toFindings(alerts, target);
 		List<FindingDraft> findings = found.stream().limit(properties.getMaxFindings()).toList();
 
 		return ScanResult.success(
 				message(zap.spiderResultCount(spiderId), spider, passive, found.size(), findings.size()),
 				startedAt,
 				findings);
+	}
+
+	private URI reachableFromZap(URI target) {
+		if (!LOCAL_HOST.equalsIgnoreCase(target.getHost())) {
+			return target;
+		}
+		return withHost(target, properties.getLocalTargetHost());
+	}
+
+	private static URI withHost(URI uri, String host) {
+		return UriComponentsBuilder.fromUri(uri).host(host).build(true).toUri();
+	}
+
+	/**
+	 * Возвращает находкам адрес актива вместо адреса, по которому к нему обращался ZAP.
+	 */
+	static List<ZapAlert> withAssetHost(List<ZapAlert> alerts, URI zapTarget, URI target) {
+		if (zapTarget.equals(target)) {
+			return alerts;
+		}
+
+		String zapOrigin = zapTarget.getScheme() + "://" + zapTarget.getRawAuthority();
+		String origin = target.getScheme() + "://" + target.getRawAuthority();
+
+		return alerts.stream()
+				.map(alert -> alert.url() != null && alert.url().startsWith(zapOrigin)
+						? alert.withUrl(origin + alert.url().substring(zapOrigin.length()))
+						: alert)
+				.toList();
 	}
 
 	private boolean acquireSession(ScanContext context, Instant deadline) throws InterruptedException {

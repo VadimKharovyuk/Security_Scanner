@@ -81,6 +81,33 @@ class AssetScopeServiceTest {
 	}
 
 	@Test
+	void acceptsLocalhostOnAllowedPort() {
+		properties.setAllowedLocalPorts(List.of(1018));
+		assertEquals("http://localhost:1018/a", service.validateAndNormalize("http://LOCALHOST:1018/a?x=1"));
+	}
+
+	@Test
+	void rejectsLocalhostOnOtherPort() {
+		properties.setAllowedLocalPorts(List.of(1018));
+		assertThrows(ScopeViolationException.class,
+				() -> service.validateAndNormalize("http://localhost:2157"));
+	}
+
+	@Test
+	void rejectsLocalhostWithoutExplicitPort() {
+		properties.setAllowedLocalPorts(List.of(80));
+		assertThrows(ScopeViolationException.class,
+				() -> service.validateAndNormalize("http://localhost"));
+	}
+
+	@Test
+	void allowedLocalPortDoesNotOpenLoopbackIp() {
+		properties.setAllowedLocalPorts(List.of(1018));
+		assertThrows(ScopeViolationException.class,
+				() -> service.validateAndNormalize("http://127.0.0.1:1018"));
+	}
+
+	@Test
 	void rejectsLoopbackIp() {
 		properties.setAllowedHosts(List.of("127.0.0.1"));
 		assertThrows(ScopeViolationException.class,

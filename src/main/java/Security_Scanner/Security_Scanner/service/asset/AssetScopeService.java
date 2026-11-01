@@ -27,8 +27,10 @@ public class AssetScopeService {
 
 	private static final Set<String> ALLOWED_SCHEMES = Set.of("http", "https");
 
+	private static final String LOCAL_HOST = "localhost";
+
 	private static final Set<String> BLOCKED_HOSTNAMES = Set.of(
-			"localhost",
+			LOCAL_HOST,
 			"metadata",
 			"metadata.google.internal"
 	);
@@ -61,6 +63,11 @@ public class AssetScopeService {
 		}
 
 		String host = normalizeHost(uri.getHost());
+
+		if (isAllowedLocalTarget(host, uri.getPort())) {
+			assertLoopbackOnly(host);
+			return buildNormalizedUrl(scheme, host, uri.getPort(), uri.getRawPath());
+		}
 
 		if (BLOCKED_HOSTNAMES.contains(host)) {
 			throw new ScopeViolationException("Хост запрещён: " + host);
@@ -110,17 +117,34 @@ public class AssetScopeService {
 		return false;
 	}
 
+	private boolean isAllowedLocalTarget(String host, int port) {
+		return LOCAL_HOST.equals(host) && properties.getAllowedLocalPorts().contains(port);
+	}
+
+	/**
+	 * Файл hosts может направить localhost на другой адрес, поэтому имени недостаточно.
+	 */
+	private void assertLoopbackOnly(String host) {
+		for (InetAddress address : resolve(host)) {
+			if (!address.isLoopbackAddress()) {
+				throw new ScopeViolationException(
+						"Хост " + host + " указывает на запрещённый адрес: " + address.getHostAddress());
+			}
+		}
+	}
+
 	private void resolveAndCheckAddresses(String host) {
-		InetAddress[] addresses;
+		for (InetAddress address : resolve(host)) {
+			assertPublicAddress(host, address);
+		}
+	}
+
+	private InetAddress[] resolve(String host) {
 		try {
-			addresses = InetAddress.getAllByName(host);
+			return InetAddress.getAllByName(host);
 		}
 		catch (UnknownHostException e) {
 			throw new ScopeViolationException("Не удалось разрешить хост: " + host);
-		}
-
-		for (InetAddress address : addresses) {
-			assertPublicAddress(host, address);
 		}
 	}
 

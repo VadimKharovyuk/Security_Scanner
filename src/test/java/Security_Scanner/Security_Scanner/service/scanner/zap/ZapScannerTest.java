@@ -92,6 +92,23 @@ class ZapScannerTest {
 	}
 
 	@Test
+	void reachesLocalTargetThroughDockerHostAndReportsAssetUrl() throws Exception {
+		String local = "http://localhost:1018";
+		String docker = "http://host.docker.internal:1018";
+		when(scope.validateAndNormalize(local)).thenReturn(local);
+		when(zap.alerts(docker, 0, 500)).thenReturn(List.of(new ZapAlert("Rule", "1", "1", "Low", "Low",
+				docker + "/a?x=1", "GET", "", "", "", "", "", "")));
+
+		ScanResult result = scanner.execute(new ScanContext(1L, 2L, 3L, local, Duration.ofSeconds(5), () -> false));
+
+		assertTrue(result.success());
+		assertEquals(1, result.findings().size());
+		assertEquals(local + "/a", result.findings().get(0).url());
+		verify(zap).startSpider(docker, "scan-1");
+		verify(zap).createContext("scan-1", ZapScanner.scopeRegex(URI.create(docker)));
+	}
+
+	@Test
 	void limitsSavedFindings() throws Exception {
 		properties.setMaxFindings(1);
 		when(zap.alerts(URL, 0, 500)).thenReturn(List.of(

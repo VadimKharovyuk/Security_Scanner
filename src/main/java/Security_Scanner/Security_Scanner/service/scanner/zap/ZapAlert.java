@@ -23,4 +23,10 @@ record ZapAlert(
 		String reference
 
 ) {
+
+	ZapAlert withUrl(String newUrl) {
+		return new ZapAlert(name, alertRef, pluginId, risk, confidence, newUrl, method, param, evidence, other,
+				description, solution, reference);
+	}
+
 }

@@ -24,4 +24,9 @@ public class ScanScopeProperties {
 
 	private boolean allowSubdomains = false;
 
+	/**
+	 * Порты, на которых разрешён только http(s)://localhost:порт. Пусто — localhost запрещён.
+	 */
+	private List<Integer> allowedLocalPorts = new ArrayList<>();
+
 }

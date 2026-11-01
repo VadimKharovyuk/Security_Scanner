@@ -259,6 +259,9 @@ security-scanner.recovery.enabled=true
 # Allowed scan scope
 security-scanner.scope.allowed-hosts=webscraft.org,www.webscraft.org
 security-scanner.scope.allow-subdomains=false
+
+# Local test target: only http(s)://localhost:<port> with these ports. Empty means localhost is blocked.
+security-scanner.scope.allowed-local-ports=${SCAN_LOCAL_PORTS:}
 ```
 
 > ⚠️ `ddl-auto=update` используется только для разработки. Перед production схему нужно зафиксировать (`validate`) и перейти на управляемые миграции.
