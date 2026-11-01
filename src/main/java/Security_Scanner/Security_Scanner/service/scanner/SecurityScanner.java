@@ -1,5 +1,6 @@
 package Security_Scanner.Security_Scanner.service.scanner;
 
+import java.time.Duration;
 import java.util.List;
 
 import Security_Scanner.Security_Scanner.enums.ScannerType;
@@ -9,6 +10,8 @@ import Security_Scanner.Security_Scanner.enums.ScannerType;
  * Реализации подключаются в Scan Orchestrator без изменения его кода.
  */
 public interface SecurityScanner {
+
+	Duration DEFAULT_TIMEOUT = Duration.ofSeconds(30);
 
 	ScannerType getType();
 
@@ -20,6 +23,13 @@ public interface SecurityScanner {
 	 */
 	default List<FindingDefinition> getDefinitions() {
 		return List.of();
+	}
+
+	/**
+	 * Максимальное время выполнения одной задачи этого сканера.
+	 */
+	default Duration getTimeout() {
+		return DEFAULT_TIMEOUT;
 	}
 
 }

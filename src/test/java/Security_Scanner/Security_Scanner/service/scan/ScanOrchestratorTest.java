@@ -29,6 +29,7 @@ import Security_Scanner.Security_Scanner.service.project.ProjectService;
 		"security-scanner.stub.enabled=true",
 		"security-scanner.http.enabled=false",
 		"security-scanner.tls.enabled=false",
+		"security-scanner.zap.enabled=false",
 		"security-scanner.recovery.enabled=false"
 })
 class ScanOrchestratorTest {

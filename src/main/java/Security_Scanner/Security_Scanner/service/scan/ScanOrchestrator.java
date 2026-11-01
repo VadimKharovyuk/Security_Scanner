@@ -1,6 +1,5 @@
 package Security_Scanner.Security_Scanner.service.scan;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
@@ -42,8 +41,6 @@ import lombok.RequiredArgsConstructor;
 public class ScanOrchestrator {
 
 	public static final int PAGE_SIZE = 20;
-
-	private static final Duration TASK_TIMEOUT = Duration.ofSeconds(30);
 
 	private final ScanRepository scanRepository;
 	private final ScanTaskRepository scanTaskRepository;
@@ -269,13 +266,6 @@ public class ScanOrchestrator {
 			default -> ScanEventType.SCAN_FAILED;
 		};
 		addEvent(scan, eventType, "Сканирование завершено со статусом " + status);
-	}
-
-	/**
-	 * Таймаут одной задачи сканирования.
-	 */
-	public Duration getTaskTimeout() {
-		return TASK_TIMEOUT;
 	}
 
 	private Scan getEntity(Long id) {

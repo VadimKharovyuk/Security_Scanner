@@ -71,7 +71,8 @@
 - [x] Scan Orchestrator, HTTP Scanner и заглушка для тестов
 - [x] Finding Processor и Evidence Manager (HTTP-проверки)
 - [x] TLS Scanner
-- [ ] OWASP ZAP
+- [x] OWASP ZAP: пассивный режим
+- [ ] OWASP ZAP: активный режим
 - [ ] AI-слой
 - [ ] Attack Graph
 - [ ] Validation Engine
@@ -122,9 +123,8 @@
 **Планируется**
 
 - Spring Security (позже)
-- Spring AI: Ollama + cloud LLM через OpenAI-compatible API
-- OWASP ZAP
-- Docker для изоляции scanner workers (в конце проекта)
+- Spring AI: инструменты `@Tool` поверх сервисного слоя, модель через OpenRouter
+- Docker для упаковки приложения под хостинг (в конце проекта)
 - Redis, Flyway — **не используются**
 
 ---
@@ -151,6 +151,7 @@ src/main/java/Security_Scanner/Security_Scanner/
     ├── scan/      # жизненный цикл сканирования
     ├── finding/   # находки и их каталог
     └── scanner/   # контракт сканера и реализации (HTTP, TLS)
+        └── zap/   # пассивный анализ через OWASP ZAP
 ```
 
 ```
@@ -234,6 +235,11 @@ security-scanner.http.enabled=true
 # TLS scanner
 security-scanner.tls.enabled=true
 
+# OWASP ZAP (passive only)
+security-scanner.zap.enabled=${ZAP_ENABLED:false}
+security-scanner.zap.url=${ZAP_URL:http://127.0.0.1:8090}
+security-scanner.zap.api-key=${ZAP_API_KEY:}
+
 # Close scans interrupted by a restart
 security-scanner.recovery.enabled=true
 
@@ -311,6 +317,24 @@ security-scanner.scope.allow-subdomains=false
 
 JDK запрещает TLS 1.0 и 1.1, поэтому их поддержка определяется по ответу сервера на вручную сформированный ClientHello. Если сервер работает только с версиями или шифрами, запрещёнными в JDK, сертификат прочитать нельзя, и в отчёт попадает только `TLS_WEAK_PROTOCOL`.
 
+### OWASP ZAP
+
+Сканер выключен по умолчанию: при включении каждое сканирование обходит страницы актива. Для запуска нужен Docker:
+
+```bash
+cp .env.example .env              # задать ZAP_API_KEY и ZAP_ENABLED=true
+docker compose up -d
+```
+
+Выполняется только пассивный анализ, атакующие запросы не отправляются:
+
+- обход ограничен хостом и портом актива, поддомены и другие сайты исключены;
+- формы не отправляются, обход ограничен глубиной 5, 5 минутами и 2 потоками;
+- spider всё же открывает все найденные ссылки методом GET, включая ссылки вида `/logout`;
+- находки вне актива отбрасываются повторно, query-параметры в URL не сохраняются, секреты в доказательствах редактируются;
+- правила ZAP добавляются в каталог `findings` при первом обнаружении с кодом `ZAP_<id правила>`;
+- одновременно выполняется одно сканирование ZAP, остальные ждут своей очереди.
+
 Каталог `findings` синхронизируется при старте приложения с определениями, которые объявляют сканеры. Значения cookie в доказательствах редактируются (`<redacted>`).
 
 ---
@@ -370,12 +394,12 @@ JDK запрещает TLS 1.0 и 1.1, поэтому их поддержка о
 | 1 | Каркас проекта, PostgreSQL, `Project`, `Asset`, `AssetScopeService` |
 | 2 | HTTP Scanner, TLS Scanner, OWASP ZAP, Scan Orchestrator |
 | 3 | Finding Processor, Evidence Manager |
-| 4 | AI Provider Router, Ollama + Cloud LLM, валидация ответов |
+| 4 | AI-слой: Spring AI `@Tool` через OpenRouter, валидация ответов |
 | 5 | Attack Graph Engine |
 | 6 | Database Access Validation Engine, Canary Records, `READ`/`WRITE`/`ADMIN` |
 | 7 | Report Engine (HTML / PDF / JSON) |
 | 8 | Hardening: SSRF, DNS rebinding, изоляция workers, audit logging |
-| 9 | Docker-изоляция scanner workers |
+| 9 | Docker-упаковка приложения для хостинга |
 
 ---
 

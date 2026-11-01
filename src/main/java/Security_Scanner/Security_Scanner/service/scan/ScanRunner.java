@@ -81,7 +81,8 @@ public class ScanRunner {
 						task.taskId(),
 						data.assetId(),
 						data.baseUrl(),
-						orchestrator.getTaskTimeout());
+						scanner.getTimeout(),
+						() -> orchestrator.isCancelRequested(scanId));
 
 				ScanResult result = scanner.execute(context);
 

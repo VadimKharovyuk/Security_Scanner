@@ -1,7 +1,9 @@
 package Security_Scanner.Security_Scanner.service.finding;
 
 import java.time.Instant;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -11,7 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import Security_Scanner.Security_Scanner.dto.finding.FindingResponse;
 import Security_Scanner.Security_Scanner.dto.finding.ScanFindingResponse;
+import Security_Scanner.Security_Scanner.dto.finding.ScanFindingSummary;
 import Security_Scanner.Security_Scanner.enums.FindingStatus;
+import Security_Scanner.Security_Scanner.enums.Severity;
+import Security_Scanner.Security_Scanner.exception.ConflictException;
 import Security_Scanner.Security_Scanner.exception.ResourceNotFoundException;
 import Security_Scanner.Security_Scanner.mapper.FindingMapper;
 import Security_Scanner.Security_Scanner.model.Finding;
@@ -20,6 +25,7 @@ import Security_Scanner.Security_Scanner.model.ScanFinding;
 import Security_Scanner.Security_Scanner.model.SecurityEvidence;
 import Security_Scanner.Security_Scanner.repository.FindingRepository;
 import Security_Scanner.Security_Scanner.repository.ScanFindingRepository;
+import Security_Scanner.Security_Scanner.repository.ScanRepository;
 import Security_Scanner.Security_Scanner.repository.SecurityEvidenceRepository;
 import Security_Scanner.Security_Scanner.service.scanner.EvidenceDraft;
 import Security_Scanner.Security_Scanner.service.scanner.FindingDefinition;
@@ -36,6 +42,7 @@ public class FindingService {
 	public static final int PAGE_SIZE = 20;
 
 	private final FindingRepository findingRepository;
+	private final ScanRepository scanRepository;
 	private final ScanFindingRepository scanFindingRepository;
 	private final SecurityEvidenceRepository evidenceRepository;
 	private final FindingMapper findingMapper;
@@ -59,6 +66,58 @@ public class FindingService {
 	@Transactional(readOnly = true)
 	public ScanFindingResponse findById(Long id) {
 		return toResponse(getEntity(id));
+	}
+
+	/**
+	 * Находки сканирования с необязательными фильтрами. Значение null отключает фильтр.
+	 */
+	@Transactional(readOnly = true)
+	public List<ScanFindingResponse> search(Long scanId, Severity severity, FindingStatus status) {
+		assertScanExists(scanId);
+		return scanFindingRepository.findByScanIdOrderByDetectedAtDesc(scanId).stream()
+				.filter(finding -> severity == null || finding.getSeverity() == severity)
+				.filter(finding -> status == null || finding.getStatus() == status)
+				.map(this::toResponse)
+				.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public ScanFindingSummary summarize(Long scanId) {
+		assertScanExists(scanId);
+		List<ScanFinding> findings = scanFindingRepository.findByScanIdOrderByDetectedAtDesc(scanId);
+
+		Map<Severity, Long> bySeverity = new EnumMap<>(Severity.class);
+		for (Severity severity : Severity.values()) {
+			bySeverity.put(severity, 0L);
+		}
+
+		Map<FindingStatus, Long> byStatus = new EnumMap<>(FindingStatus.class);
+		for (FindingStatus status : FindingStatus.values()) {
+			byStatus.put(status, 0L);
+		}
+
+		for (ScanFinding finding : findings) {
+			byStatus.merge(finding.getStatus(), 1L, Long::sum);
+			if (finding.getStatus() != FindingStatus.FALSE_POSITIVE) {
+				bySeverity.merge(finding.getSeverity(), 1L, Long::sum);
+			}
+		}
+
+		return new ScanFindingSummary(scanId, findings.size(), bySeverity, byStatus);
+	}
+
+	/**
+	 * Отмечает открытую находку как ложную.
+	 * Статусы CONFIRMED и RESOLVED здесь недоступны: они требуют технической проверки.
+	 */
+	@Transactional
+	public ScanFindingResponse markFalsePositive(Long id) {
+		return changeStatus(id, FindingStatus.OPEN, FindingStatus.FALSE_POSITIVE);
+	}
+
+	@Transactional
+	public ScanFindingResponse reopen(Long id) {
+		return changeStatus(id, FindingStatus.FALSE_POSITIVE, FindingStatus.OPEN);
 	}
 
 	@Transactional(readOnly = true)
@@ -116,6 +175,23 @@ public class FindingService {
 	public void deleteByScan(Long scanId) {
 		evidenceRepository.deleteByScanId(scanId);
 		scanFindingRepository.deleteByScanId(scanId);
+	}
+
+	private ScanFindingResponse changeStatus(Long id, FindingStatus expected, FindingStatus target) {
+		ScanFinding finding = getEntity(id);
+
+		if (finding.getStatus() != expected) {
+			throw new ConflictException("Нельзя перевести находку из статуса " + finding.getStatus() + " в " + target);
+		}
+
+		finding.setStatus(target);
+		return toResponse(finding);
+	}
+
+	private void assertScanExists(Long scanId) {
+		if (!scanRepository.existsById(scanId)) {
+			throw new ResourceNotFoundException("Сканирование не найдено: " + scanId);
+		}
 	}
 
 	private ScanFinding getEntity(Long id) {
